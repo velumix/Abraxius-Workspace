@@ -242,7 +242,7 @@
               </ListBox.ItemTemplate>
             </ListBox>
             <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
-              <TextBox Text="{Binding Chat.Input, Mode=TwoWay}" Classes="command-input" AcceptsReturn="True" MinHeight="54" MaxHeight="140" TextWrapping="Wrap" PlaceholderText="Message Abraxius…" KeyDown="OnChatKeyDown" />
+              <TextBox x:Name="ChatInput" Text="{Binding Chat.Input, Mode=TwoWay}" Classes="command-input" AcceptsReturn="True" MinHeight="54" MaxHeight="140" TextWrapping="Wrap" PlaceholderText="Message Abraxius…" />
               <Button Grid.Column="1" Content="SEND  ↵" Classes="primary" Command="{Binding Chat.SendCommand}" />
               <Button Grid.Column="2" Content="RUN JOB" Classes="primary" Command="{Binding RunChatAsMissionCommand}" IsEnabled="{Binding Chat.CanSendToMission}" />
               <Button Grid.Column="3" Content="CANCEL" Classes="quiet-button" Command="{Binding Chat.CancelCommand}" IsVisible="{Binding Chat.IsSending}" />

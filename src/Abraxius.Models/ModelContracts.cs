@@ -104,8 +104,40 @@ public sealed class MockModelProvider : IModelProvider
     {
         var started = Stopwatch.GetTimestamp();
         await Task.Delay(_latency, cancellationToken).ConfigureAwait(false);
-        var text = $"Deterministic synthesis for: {request.Prompt}";
+        var text = BuildResponse(request);
         return new ModelResult(text, request.ExpectedJsonSchema is null ? null : JsonSerializer.Serialize(new { answer = text }), _model, new ModelUsage(32, 16), Stopwatch.GetElapsedTime(started), "mock");
+    }
+
+    private static string BuildResponse(ModelRequest request)
+    {
+        if (request.Metadata?.TryGetValue("surface", out var surface) == true &&
+            string.Equals(surface, "chat-room", StringComparison.OrdinalIgnoreCase))
+        {
+            var message = ExtractLatestUserMessage(request.Prompt);
+            return string.IsNullOrWhiteSpace(message)
+                ? "I’m ready. Send a message to begin."
+                : $"Offline demo response: I received \"{message}\". Configure a model provider for full AI answers.";
+        }
+
+        return $"Deterministic synthesis for: {request.Prompt}";
+    }
+
+    private static string ExtractLatestUserMessage(string prompt)
+    {
+        var lines = prompt.Split('\n');
+        for (var index = lines.Length - 1; index >= 0; index--)
+        {
+            const string marker = "USER: ";
+            if (!lines[index].StartsWith(marker, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var message = lines[index][marker.Length..].Trim();
+            return message.Length > 320 ? message[..320] + "…" : message;
+        }
+
+        return string.Empty;
     }
 
     public async IAsyncEnumerable<ModelStreamEvent> StreamAsync(

@@ -1,12 +1,21 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Abraxius.Protocol;
 
 namespace Abraxius.App;
 
 public partial class MainView : UserControl
 {
-    public MainView() => InitializeComponent();
+    public MainView()
+    {
+        InitializeComponent();
+
+        // Intercept Enter during the tunnel phase, before TextBox's AcceptsReturn
+        // handler can turn it into a newline. Shift+Enter is intentionally left
+        // unhandled so the TextBox inserts a newline normally.
+        ChatInput.AddHandler(InputElement.KeyDownEvent, OnChatKeyDown, RoutingStrategies.Tunnel);
+    }
 
     public MainView(MainViewModel viewModel)
         : this()
@@ -83,10 +92,15 @@ public partial class MainView : UserControl
 
     private void OnChatKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter && (e.KeyModifiers & KeyModifiers.Shift) == 0)
+        if (e.Key != Key.Enter || (e.KeyModifiers & KeyModifiers.Shift) != 0)
+        {
+            return;
+        }
+
+        e.Handled = true;
+        if (ViewModel.Chat.SendCommand.CanExecute(null))
         {
             ViewModel.Chat.SendCommand.Execute(null);
-            e.Handled = true;
         }
     }
 

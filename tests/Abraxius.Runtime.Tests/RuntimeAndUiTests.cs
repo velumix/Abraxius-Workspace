@@ -145,7 +145,8 @@ public sealed class RuntimeAndUiTests
         var assistant = Assert.Single(chat.Messages, static message => message.IsAssistant);
         Assert.False(assistant.IsStreaming);
         Assert.False(assistant.IsError);
-        Assert.Contains("Deterministic synthesis", assistant.Text, StringComparison.Ordinal);
+        Assert.Contains("Offline demo response", assistant.Text, StringComparison.Ordinal);
+        Assert.Contains("Explain the scheduler briefly.", assistant.Text, StringComparison.Ordinal);
         Assert.Equal("READY · RESPONSE COMPLETE", chat.Status);
 
         await chat.DisposeAsync();

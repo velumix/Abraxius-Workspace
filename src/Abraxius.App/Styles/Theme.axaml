@@ -584,4 +584,38 @@
   <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
     <Setter Property="Background" Value="{StaticResource SelectionBrush}" />
   </Style>
+  <Style Selector="Border.design-candidate-card">
+    <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="14" />
+  </Style>
+  <Style Selector="Border.design-candidate-card:pointerover">
+    <Setter Property="BorderBrush" Value="{StaticResource AccentMutedBrush}" />
+  </Style>
+  <Style Selector="Border.design-candidate-letter">
+    <Setter Property="Background" Value="{StaticResource InteractiveSelectedBrush}" />
+    <Setter Property="CornerRadius" Value="7" />
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="30" />
+  </Style>
+  <Style Selector="TextBlock.design-candidate-letter-text">
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.design-preview">
+    <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+    <Setter Property="MinHeight" Value="180" />
+    <Setter Property="MaxHeight" Value="240" />
+    <Setter Property="CornerRadius" Value="7" />
+    <Setter Property="ClipToBounds" Value="True" />
+  </Style>
+  <Style Selector="TextBlock.mono-text">
+    <Setter Property="FontFamily" Value="Cascadia Mono,Consolas,monospace" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+  </Style>
 </Styles>

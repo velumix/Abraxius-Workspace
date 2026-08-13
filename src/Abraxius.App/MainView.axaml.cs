@@ -6,7 +6,11 @@ namespace Abraxius.App;
 
 public partial class MainView : UserControl
 {
-    public MainView() => InitializeComponent();
+    public MainView()
+    {
+        InitializeComponent();
+        AttachedToVisualTree += OnAttachedToVisualTree;
+    }
 
     public MainView(MainViewModel viewModel)
         : this()
@@ -16,6 +20,14 @@ public partial class MainView : UserControl
 
     private MainViewModel ViewModel => DataContext as MainViewModel
         ?? throw new InvalidOperationException("MainView requires a MainViewModel data context.");
+
+    private void OnAttachedToVisualTree(object? sender, Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.AttachDesignCaptureRoot(this);
+        }
+    }
 
     private void OnTaskSelected(object? sender, TaskId taskId) => ViewModel.SelectTask(taskId);
 

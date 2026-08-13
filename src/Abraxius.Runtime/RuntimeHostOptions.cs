@@ -21,6 +21,7 @@ public sealed record RuntimeHostOptions(
     string? ComputeRootPath = null,
     string? PluginRootPath = null,
     string? PluginHostPath = null,
+    string? WorkspaceRoot = null,
     bool UseFileEvidence = true,
     bool UseFileLedger = true,
     bool UseFileProgression = true,

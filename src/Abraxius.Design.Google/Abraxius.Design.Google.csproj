@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Design.Google</RootNamespace>
+    <AssemblyName>Abraxius.Design.Google</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Design/Abraxius.Design.csproj" />
+    <ProjectReference Include="../Abraxius.Security/Abraxius.Security.csproj" />
+  </ItemGroup>
+</Project>

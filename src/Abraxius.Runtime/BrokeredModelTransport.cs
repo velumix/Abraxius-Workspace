@@ -83,6 +83,8 @@ internal static class ModelSecretBootstrapFactory
         Add(options.Frontier, IntelligenceGateway.Frontier);
         AddVoice(SpeechCredentialNames.Deepgram, "ABRAXIUS_DEEPGRAM_API_KEY", "Deepgram speech credential", "wss://api.deepgram.com");
         AddVoice(SpeechCredentialNames.ElevenLabs, "ABRAXIUS_ELEVENLABS_API_KEY", "ElevenLabs speech credential", "wss://api.elevenlabs.io");
+        AddDesignCredential("ABRAXIUS_STITCH_API_KEY", "Google Stitch API key", "secret://google/stitch/api-key");
+        AddDesignCredential("ABRAXIUS_STITCH_ACCESS_TOKEN", "Google Stitch access token", "secret://google/stitch/access-token");
 
         ISecretStore store = mappings.Count == 0
             ? writableStore
@@ -109,6 +111,12 @@ internal static class ModelSecretBootstrapFactory
             var metadata = new SecretMetadata(reference, displayName, "environment", [destination], DateTimeOffset.UtcNow, RequiresApproval: false);
             mappings[reference] = (variable, metadata);
             voiceReferences[name] = reference;
+        }
+
+        void AddDesignCredential(string variable, string displayName, string referenceText)
+        {
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(variable)) || !SecretReference.TryParse(referenceText, out var reference)) return;
+            mappings[reference] = (variable, new SecretMetadata(reference, displayName, "environment", ["https://stitch.googleapis.com"], DateTimeOffset.UtcNow, RequiresApproval: false));
         }
     }
 }

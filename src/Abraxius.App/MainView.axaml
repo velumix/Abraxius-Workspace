@@ -4,6 +4,7 @@
              xmlns:controls="using:Abraxius.App"
              xmlns:chat="using:Abraxius.App.Views.Chat"
              xmlns:shell="using:Abraxius.App.Views.Shell"
+             xmlns:design="using:Abraxius.App.Views.Design"
              x:Class="Abraxius.App.MainView"
              x:Name="Root"
              x:DataType="vm:MainViewModel"
@@ -147,6 +148,7 @@
           </Border>
         </Grid>
         <chat:ChatView IsVisible="{Binding IsChatVisible}" />
+        <design:DesignStudioView IsVisible="{Binding IsDesignStudioVisible}" />
         <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsDiagnosticsVisible}">
           <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="12">

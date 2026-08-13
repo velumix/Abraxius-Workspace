@@ -116,6 +116,7 @@ public sealed class SecurityRuntime : IAsyncDisposable
     public IPolicyEngine Policies { get; }
     public IAuthorizationGrantStore Grants { get; }
     public ISecurityAuditStore Audit => _audit;
+    public ISecretStore SecretStore => _secretStore;
     public ISecretBroker Secrets { get; }
     public ISecurityApprovalService Approvals { get; }
     public ISandboxService Sandboxes { get; }

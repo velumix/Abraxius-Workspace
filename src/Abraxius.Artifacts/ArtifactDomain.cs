@@ -34,6 +34,7 @@ public readonly record struct ArtifactKind(string Value)
     public static readonly ArtifactKind ReleaseCandidate = new("release-candidate");
     public static readonly ArtifactKind DeploymentPlan = new("deployment-plan");
     public static readonly ArtifactKind GeneratedData = new("generated-data");
+    public static readonly ArtifactKind Design = new("design");
     public override string ToString() => Value;
 }
 

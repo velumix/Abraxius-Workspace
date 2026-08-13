@@ -67,6 +67,7 @@ public static class NavigationIcons
     public static string Fabric { get; } = "M5 5 L19 5 L19 19 L5 19 Z M2 12 L5 12 M19 12 L22 12 M12 2 L12 5 M12 19 L12 22";
     public static string Compute { get; } = "M4 4 L20 4 L20 20 L4 20 Z M8 8 L16 8 L16 16 L8 16 Z";
     public static string Extensions { get; } = "M10 4 L14 4 L14 10 L20 10 L20 14 L14 14 L14 20 L10 20 L10 14 L4 14 L4 10 L10 10 Z";
+    public static string DesignStudio { get; } = "M4 5 L20 5 L20 17 L14 17 L12 20 L10 17 L4 17 Z M8 9 L16 9 M8 13 L13 13";
     public static string NeedsYou { get; } = "M12 3 L21 19 L3 19 Z M12 9 L12 14 M12 17 L12 17";
     public static string Security { get; } = "M12 3 L20 6 L20 12 C20 17 16 20 12 21 C8 20 4 17 4 12 L4 6 Z M8 12 L11 15 L16 9";
     public static string Commands { get; } = "M4 5 L20 5 L20 19 L4 19 Z M8 9 L16 9 M8 13 L13 13";

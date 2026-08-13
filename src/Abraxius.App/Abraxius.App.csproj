@@ -23,6 +23,7 @@
     <ProjectReference Include="../Abraxius.Fabric/Abraxius.Fabric.csproj" />
     <ProjectReference Include="../Abraxius.Compute/Abraxius.Compute.csproj" />
     <ProjectReference Include="../Abraxius.Plugins/Abraxius.Plugins.csproj" />
+    <ProjectReference Include="../Abraxius.Design/Abraxius.Design.csproj" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Fonts.Inter" />

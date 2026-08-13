@@ -13,5 +13,6 @@
     <ProjectReference Include="../Abraxius.Voice/Abraxius.Voice.csproj" />
     <ProjectReference Include="../Abraxius.PluginHost/Abraxius.PluginHost.csproj" ReferenceOutputAssembly="false" />
     <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
   </ItemGroup>
 </Project>

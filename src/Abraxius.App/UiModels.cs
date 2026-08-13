@@ -212,6 +212,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
     private readonly ObservableCollection<UiSecurityAuditRow> _securityAudit = [];
     private readonly ObservableCollection<string> _inAppNotifications = [];
     private readonly ObservableCollection<UiSpecialistTraceItem> _specialistTrace = [];
+    private readonly ObservableCollection<UiNavigationGroup> _navigationGroups = [];
+    private readonly List<UiNavigationItem> _navigationItems = [];
     private IReadOnlyList<UiSpecialistCard> _specialistCards = [];
     private UiLayoutPreferences _layout;
     private string _commandText = "Analyze the repository";
@@ -266,7 +268,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         _fabric = new FabricViewModel(runtime.Fabric, _dispatcher);
         _compute = new ComputeViewModel(runtime.Compute, _dispatcher);
         _extensions = new ExtensionsViewModel(runtime.Plugins, _dispatcher);
-        _chat = new ChatViewModel(runtime.Model, _dispatcher);
+        _chat = new ChatViewModel(runtime.Model, _dispatcher, runtime.Agents.Registry.Definitions.Select(static definition => definition.DisplayName));
         _terminal = new TerminalViewModel(_dispatcher, new ProcessTerminalSurface(processService));
         _aggregator = new RuntimeUiStateAggregator(runtime.Events, _dispatcher, ApplySnapshot, runtime.Metrics);
         _voiceEvents = new VoiceEventHub();
@@ -313,6 +315,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         SelectNeedsYouCommand = new RelayCommand(_ => { SelectRail(RailDestination.NeedsYou); Forget(RefreshNeedsYouAsync()); });
         SelectSecurityCommand = new RelayCommand(_ => { SelectRail(RailDestination.Security); Forget(RefreshSecurityAsync()); });
         SelectSettingsCommand = new RelayCommand(_ => SelectRail(RailDestination.Settings));
+        ToggleRailCommand = new RelayCommand(_ => IsRailExpanded = !IsRailExpanded);
         RefreshSecurityCommand = new RelayCommand(_ => Forget(RefreshSecurityAsync()));
         ToggleLockdownCommand = new RelayCommand(_ => { _runtime.Security.Kernel.Lockdown = !_runtime.Security.Kernel.Lockdown; Forget(RefreshSecurityAsync()); });
         CycleCloseBehaviorCommand = new RelayCommand(_ => Forget(UpdatePresenceSettingsAsync(_runtime.Presence.Settings with { CloseButton = _runtime.Presence.Settings.CloseButton switch { CloseButtonBehavior.HideToTray => CloseButtonBehavior.Quit, CloseButtonBehavior.Quit => CloseButtonBehavior.Ask, _ => CloseButtonBehavior.HideToTray } })));
@@ -362,6 +365,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         RunChatAsMissionCommand = new AsyncRelayCommand(RunChatAsMissionAsync);
 
         RegisterCommands();
+        BuildNavigation();
+        _chat.SetCommandSearch(query => _commands.Search(query)
+            .Select(command => new ChatSuggestion("/", command.Id, command.Title, command.Description))
+            .ToArray());
         RefreshCommandResults();
         ParseAxl();
         _runtime.Presence.NeedsYou.Changed += OnNeedsYouChanged;
@@ -431,6 +438,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
     public ObservableCollection<UiNeedsYouRow> NeedsYouItems => _needsYou;
     public ObservableCollection<UiSecurityGrantRow> SecurityGrants => _securityGrants;
     public ObservableCollection<UiSecurityAuditRow> SecurityAudit => _securityAudit;
+    public IReadOnlyList<UiNavigationGroup> NavigationGroups => _navigationGroups;
     public string SecurityStatusText { get; private set; } = "SECURITY INITIALIZING";
     public string SecurityOverviewText { get; private set; } = "No security snapshot.";
     public string SecurityPolicyText { get; private set; } = "Balanced · default deny";
@@ -470,6 +478,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
     public ICommand RejectNeedsYouCommand { get; }
     public ICommand SnoozeNeedsYouCommand { get; }
     public ICommand SelectSettingsCommand { get; }
+    public ICommand ToggleRailCommand { get; }
     public ICommand RunChatAsMissionCommand { get; }
     public ICommand CycleCloseBehaviorCommand { get; }
     public ICommand CycleBackgroundModeCommand { get; }
@@ -499,6 +508,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
     public bool IsUpdateReady => _updates.DownloadedUpdate is not null;
     public UpdateInfo? AvailableUpdate => _updates.AvailableUpdate;
     public RailDestination SelectedRail { get => _selectedRail; private set => SetProperty(ref _selectedRail, value); }
+    public double RailWidth => IsRailExpanded ? 216 : 56;
     public ViewportClass ViewportClass { get => _viewportClass; private set => SetProperty(ref _viewportClass, value); }
     public MissionViewMode MissionView
     {
@@ -521,7 +531,18 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
     }
     public UiDensity Density { get => _layout.Density; private set { if (_layout.Density == value) return; _layout = _layout with { Density = value }; OnPropertyChanged(); SaveLayout(); } }
     public bool ReducedMotion { get => _layout.ReducedMotion; private set { if (_layout.ReducedMotion == value) return; _layout = _layout with { ReducedMotion = value }; OnPropertyChanged(); SaveLayout(); } }
-    public bool IsRailExpanded { get => _layout.RailExpanded && ViewportClass != ViewportClass.Compact; private set { _layout = _layout with { RailExpanded = value }; OnPropertyChanged(); SaveLayout(); } }
+    public bool IsRailExpanded
+    {
+        get => _layout.RailExpanded && ViewportClass != ViewportClass.Compact;
+        private set
+        {
+            if (_layout.RailExpanded == value) return;
+            _layout = _layout with { RailExpanded = value };
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(RailWidth));
+            SaveLayout();
+        }
+    }
     public bool IsInspectorVisible { get => _layout.InspectorVisible && ViewportClass != ViewportClass.Compact; private set { _layout = _layout with { InspectorVisible = value }; OnPropertyChanged(); SaveLayout(); } }
     public bool IsActivityVisible { get => _layout.ActivityVisible && ViewportClass != ViewportClass.Compact; private set { _layout = _layout with { ActivityVisible = value }; OnPropertyChanged(); OnPropertyChanged(nameof(IsActivityDeckVisible)); SaveLayout(); } }
     public bool IsCommandPaletteOpen { get; private set; }
@@ -674,7 +695,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
 
     private async Task RunChatAsMissionAsync()
     {
-        var objective = _chat.LatestUserText;
+        var objective = _chat.TakeMissionObjective();
         if (string.IsNullOrWhiteSpace(objective)) return;
 
         CommandText = objective;
@@ -705,6 +726,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
     public void SelectRail(RailDestination destination)
     {
         SelectedRail = destination;
+        foreach (var item in _navigationItems)
+        {
+            item.SetSelected(item.Destination == destination);
+        }
         OnPropertyChanged(nameof(IsMissionVisible));
         OnPropertyChanged(nameof(IsChatVisible));
         OnPropertyChanged(nameof(IsCommandBarVisible));
@@ -739,6 +764,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         var profile = ViewportProfile.From(width, height, scale, _environment.Device.TouchPrimary, ReducedMotion);
         ViewportClass = profile.Class;
         OnPropertyChanged(nameof(IsRailExpanded));
+        OnPropertyChanged(nameof(RailWidth));
         OnPropertyChanged(nameof(IsInspectorVisible));
         OnPropertyChanged(nameof(IsActivityVisible));
     }
@@ -1088,6 +1114,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
             OnPropertyChanged(nameof(NeedsYouItems));
             OnPropertyChanged(nameof(NeedsYouCount));
             OnPropertyChanged(nameof(HasNeedsYou));
+            UpdateNavigationBadge();
         });
     }
 
@@ -1167,6 +1194,64 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         SkillStatus = matches.Count == 0
             ? "No eligible procedure matched. Fresh planning remains available."
             : string.Join("\n", matches.Select(match => $"{match.Skill.Id}/{match.Skill.Version} {match.Score:0.00} · {match.Explanation}"));
+    }
+
+    private void BuildNavigation()
+    {
+        _navigationGroups.Clear();
+        _navigationItems.Clear();
+
+        UiNavigationItem Item(
+            string label,
+            RailDestination? destination,
+            string group,
+            string icon,
+            ICommand command,
+            string description)
+        {
+            var item = new UiNavigationItem(label, destination, group, icon, command, description);
+            item.SetSelected(destination == SelectedRail);
+            _navigationItems.Add(item);
+            return item;
+        }
+
+        _navigationGroups.Add(new UiNavigationGroup("WORK", [
+            Item("Mission", RailDestination.Mission, "WORK", NavigationIcons.Mission, SelectMissionCommand, "Mission graph and execution state"),
+            Item("Chat", RailDestination.Chat, "WORK", NavigationIcons.Chat, SelectChatCommand, "Direct conversation with Abraxius"),
+            Item("Agents", RailDestination.Agents, "WORK", NavigationIcons.Agents, SelectAgentsCommand, "Specialist instances and assignments"),
+            Item("Artifacts", RailDestination.Artifacts, "WORK", NavigationIcons.Artifacts, SelectArtifactsCommand, "Review immutable outputs and provenance")
+        ]));
+        _navigationGroups.Add(new UiNavigationGroup("KNOWLEDGE", [
+            Item("Memory", RailDestination.Memory, "KNOWLEDGE", NavigationIcons.Memory, SelectMemoryCommand, "Search project knowledge"),
+            Item("Skills", RailDestination.Skills, "KNOWLEDGE", NavigationIcons.Skills, SelectSkillsCommand, "Validated procedures"),
+            Item("Debrief", RailDestination.Debrief, "KNOWLEDGE", NavigationIcons.Debrief, SelectDebriefCommand, "Interactive mission debrief"),
+            Item("Evaluation", RailDestination.Evaluation, "KNOWLEDGE", NavigationIcons.Evaluation, SelectEvaluationCommand, "Evaluation Lab and release gates")
+        ]));
+        _navigationGroups.Add(new UiNavigationGroup("SYSTEM", [
+            Item("Terminal", RailDestination.Terminal, "SYSTEM", NavigationIcons.Terminal, SelectTerminalCommand, "Direct terminal surface"),
+            Item("Diagnostics", RailDestination.Diagnostics, "SYSTEM", NavigationIcons.Diagnostics, SelectDiagnosticsCommand, "AXL and runtime diagnostics"),
+            Item("Fabric", RailDestination.Fabric, "SYSTEM", NavigationIcons.Fabric, SelectFabricCommand, "Distributed node fabric"),
+            Item("Compute", RailDestination.Compute, "SYSTEM", NavigationIcons.Compute, SelectComputeCommand, "Local models and compute"),
+            Item("Extensions", RailDestination.Extensions, "SYSTEM", NavigationIcons.Extensions, SelectExtensionsCommand, "Installed plugin extensions")
+        ]));
+        _navigationGroups.Add(new UiNavigationGroup("ATTENTION", [
+            Item("Needs You", RailDestination.NeedsYou, "ATTENTION", NavigationIcons.NeedsYou, SelectNeedsYouCommand, "Items waiting for a decision"),
+            Item("Security", RailDestination.Security, "ATTENTION", NavigationIcons.Security, SelectSecurityCommand, "Security grants and audit")
+        ]));
+        _navigationGroups.Add(new UiNavigationGroup("UTILITY", [
+            Item("Commands", null, "UTILITY", NavigationIcons.Commands, OpenCommandPaletteCommand, "Open command palette"),
+            Item("Settings", RailDestination.Settings, "UTILITY", NavigationIcons.Settings, SelectSettingsCommand, "Background and notification settings")
+        ]));
+
+        UpdateNavigationBadge();
+        OnPropertyChanged(nameof(NavigationGroups));
+    }
+
+    private void UpdateNavigationBadge()
+    {
+        var needsYou = _navigationItems.FirstOrDefault(item => item.Destination == RailDestination.NeedsYou);
+        if (needsYou is null) return;
+        needsYou.BadgeText = NeedsYouCount > 0 ? NeedsYouCount.ToString(CultureInfo.InvariantCulture) : string.Empty;
     }
 
     private void RegisterCommands()

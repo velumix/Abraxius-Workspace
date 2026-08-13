@@ -5,6 +5,8 @@
         Title="ABRAXIUS"
         Width="1500"
         Height="940"
+        ShowActivated="True"
+        WindowStartupLocation="CenterScreen"
         MinWidth="980"
         MinHeight="640">
   <app:MainView />

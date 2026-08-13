@@ -57,9 +57,19 @@ public sealed class DesktopApp : Abraxius.App.App
             {
                 try
                 {
+                    // Linux window managers may leave a newly-created window behind the
+                    // launcher or terminal unless the activation request happens after
+                    // the native window has been mapped. Use a short, non-persistent
+                    // topmost pulse to request foreground activation without leaving
+                    // Abraxius always-on-top.
+                    BringWindowToFront();
                     await viewModel.StartAsync().ConfigureAwait(false);
                     _startupHealth.MarkHealthy();
-                    Dispatcher.UIThread.Post(() => Forget(InitializeTrayAsync(runtime)));
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        BringWindowToFront();
+                        Forget(InitializeTrayAsync(runtime));
+                    }, DispatcherPriority.ApplicationIdle);
                 }
                 catch (Exception exception)
                 {
@@ -107,8 +117,26 @@ public sealed class DesktopApp : Abraxius.App.App
         if (_window is null) return;
         if (!_window.IsVisible) _window.Show();
         if (_window.WindowState == WindowState.Minimized) _window.WindowState = WindowState.Normal;
-        _window.Activate();
+        BringWindowToFront();
         HostedRuntime?.Presence.Background.SetWindowState(WindowPresenceState.VisibleFocused);
+    }
+
+    private void BringWindowToFront()
+    {
+        if (_window is null) return;
+        if (!_window.IsVisible) _window.Show();
+        if (_window.WindowState == WindowState.Minimized) _window.WindowState = WindowState.Normal;
+
+        _window.Topmost = true;
+        _window.Activate();
+        _window.Focus();
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (_window is null) return;
+            _window.Topmost = false;
+            _window.Activate();
+            _window.Focus();
+        }, DispatcherPriority.ApplicationIdle);
     }
 
     private void OnWindowPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)

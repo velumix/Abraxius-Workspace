@@ -12,5 +12,5 @@ namespace Abraxius.App.Android;
 public sealed class MainActivity : AvaloniaMainActivity<Abraxius.App.App>
 {
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder) =>
-        base.CustomizeAppBuilder(builder).LogToTrace();
+        base.CustomizeAppBuilder(builder).WithInterFont().LogToTrace();
 }

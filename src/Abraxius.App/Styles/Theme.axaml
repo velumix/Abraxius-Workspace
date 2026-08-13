@@ -15,10 +15,18 @@
     <SolidColorBrush x:Key="WarningBrush" Color="#F2B65D" />
     <SolidColorBrush x:Key="ErrorBrush" Color="#FF6B7A" />
     <SolidColorBrush x:Key="SuccessBrush" Color="#62D99A" />
+    <SolidColorBrush x:Key="BorderSubtleBrush" Color="#202B36" />
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="#344352" />
+    <SolidColorBrush x:Key="InteractiveHoverBrush" Color="#182733" />
+    <SolidColorBrush x:Key="InteractivePressedBrush" Color="#20363B" />
+    <SolidColorBrush x:Key="InteractiveSelectedBrush" Color="#1A3437" />
+    <SolidColorBrush x:Key="AccentMutedBrush" Color="#286E6B" />
+    <FontFamily x:Key="UiFont">Inter,DejaVu Sans</FontFamily>
+    <FontFamily x:Key="MonoFont">Cascadia Mono,DejaVu Sans Mono</FontFamily>
   </Styles.Resources>
 
   <Style Selector="Window">
-    <Setter Property="FontFamily" Value="Cascadia Mono,DejaVu Sans Mono" />
+    <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
     <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
     <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
   </Style>
@@ -80,19 +88,85 @@
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="Padding" Value="8,6" />
   </Style>
-  <Style Selector="Border.chat-bubble">
-    <Setter Property="BorderThickness" Value="1" />
+  <Style Selector="Border.navigation-rail">
+    <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+    <Setter Property="Padding" Value="8,12" />
+  </Style>
+  <Style Selector="Border.rail-brand">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="4,4" />
+  </Style>
+  <Style Selector="Border.brand-mark, Border.assistant-mark">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="CornerRadius" Value="9" />
+    <Setter Property="Background" Value="{StaticResource AccentMutedBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.brand-mark TextBlock, Border.assistant-mark TextBlock">
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBlock.rail-brand-title">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="TextBlock.rail-brand-caption, TextBlock.rail-group-label">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="Foreground" Value="{StaticResource DimBrush}" />
+    <Setter Property="LetterSpacing" Value="1.1" />
+  </Style>
+  <Style Selector="StackPanel.rail-group">
+    <Setter Property="Margin" Value="0,4,0,10" />
+  </Style>
+  <Style Selector="ToggleButton.rail-item">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="44" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     <Setter Property="CornerRadius" Value="8" />
-    <Setter Property="Padding" Value="12,9" />
-    <Setter Property="MaxWidth" Value="760" />
   </Style>
-  <Style Selector="Border.chat-bubble.assistant">
-    <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
-    <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+  <Style Selector="ToggleButton.rail-item:pointerover">
+    <Setter Property="Background" Value="{StaticResource InteractiveHoverBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
   </Style>
-  <Style Selector="Border.chat-bubble.user">
-    <Setter Property="Background" Value="{StaticResource SelectionBrush}" />
+  <Style Selector="ToggleButton.rail-item:checked">
+    <Setter Property="Background" Value="{StaticResource InteractiveSelectedBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.rail-item:focus-visible">
     <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="ToggleButton.rail-item PathIcon">
+    <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" />
+  </Style>
+  <Style Selector="TextBlock.rail-item-label">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.rail-badge">
+    <Setter Property="Background" Value="{StaticResource WarningBrush}" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="MinWidth" Value="18" />
+    <Setter Property="Height" Value="18" />
+    <Setter Property="Padding" Value="4,0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.rail-badge TextBlock">
+    <Setter Property="Foreground" Value="#14110B" />
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
   <Style Selector="Border.inspector-rule">
     <Setter Property="Height" Value="1" />
@@ -154,6 +228,297 @@
     <Setter Property="FontSize" Value="12" />
     <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
   </Style>
+
+  <Style Selector="Border.chat-surface">
+    <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+    <Setter Property="Padding" Value="24,20,24,18" />
+  </Style>
+  <Style Selector="TextBlock.chat-page-title">
+    <Setter Property="FontSize" Value="18" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="TextBlock.chat-page-subtitle">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+  </Style>
+  <Style Selector="TextBlock.chat-header-status">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="StackPanel.chat-empty-state">
+    <Setter Property="MaxWidth" Value="560" />
+    <Setter Property="Margin" Value="0,70,0,70" />
+  </Style>
+  <Style Selector="ListBox.chat-transcript">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="ListBox.chat-transcript ListBoxItem">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+  </Style>
+  <Style Selector="TextBlock.chat-empty-title">
+    <Setter Property="FontSize" Value="24" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="TextBlock.chat-empty-subtitle">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="Margin" Value="0,8,0,0" />
+  </Style>
+  <Style Selector="Button.suggestion-chip">
+    <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="Padding" Value="12,8" />
+    <Setter Property="Margin" Value="4" />
+    <Setter Property="FontSize" Value="13" />
+  </Style>
+  <Style Selector="Button.suggestion-chip:pointerover">
+    <Setter Property="Background" Value="{StaticResource InteractiveHoverBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="Panel.chat-turn">
+    <Setter Property="Margin" Value="0,0,0,24" />
+  </Style>
+  <Style Selector="Border.chat-user-message">
+    <Setter Property="Background" Value="{StaticResource SelectionBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Padding" Value="15,12" />
+    <Setter Property="Margin" Value="0,0,0,0" />
+  </Style>
+  <Style Selector="TextBlock.chat-assistant-speaker, TextBlock.chat-speaker">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="TextBlock.chat-meta">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{StaticResource DimBrush}" />
+  </Style>
+  <Style Selector="SelectableTextBlock.chat-user-text, SelectableTextBlock.chat-streaming-text, SelectableTextBlock.chat-paragraph">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="LineHeight" Value="23" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="SelectableTextBlock.chat-streaming-text">
+    <Setter Property="Margin" Value="0,10,0,0" />
+  </Style>
+  <Style Selector="SelectableTextBlock.chat-heading">
+    <Setter Property="FontSize" Value="18" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LineHeight" Value="26" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    <Setter Property="Margin" Value="0,12,0,4" />
+  </Style>
+  <Style Selector="StackPanel.chat-assistant-message">
+    <Setter Property="Margin" Value="0,0,0,0" />
+  </Style>
+  <Style Selector="ItemsControl.chat-content">
+    <Setter Property="Margin" Value="0,10,0,0" />
+  </Style>
+  <Style Selector="ItemsControl.chat-list-block">
+    <Setter Property="Margin" Value="0,8,0,8" />
+  </Style>
+  <Style Selector="TextBlock.chat-list-marker">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="Border.chat-quote">
+    <Setter Property="BorderBrush" Value="{StaticResource AccentMutedBrush}" />
+    <Setter Property="BorderThickness" Value="2,0,0,0" />
+    <Setter Property="Padding" Value="14,2,0,2" />
+    <Setter Property="Margin" Value="0,10" />
+  </Style>
+  <Style Selector="Border.chat-quote /template/ ContentPresenter#PART_ContentPresenter > SelectableTextBlock">
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+  </Style>
+  <Style Selector="Border.chat-code-block">
+    <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="9" />
+    <Setter Property="Padding" Value="13" />
+    <Setter Property="Margin" Value="0,12" />
+  </Style>
+  <Style Selector="TextBlock.chat-code-language">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="Foreground" Value="{StaticResource DimBrush}" />
+  </Style>
+  <Style Selector="SelectableTextBlock.chat-code">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    <Setter Property="LineHeight" Value="20" />
+  </Style>
+  <Style Selector="SelectableTextBlock.chat-link">
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    <Setter Property="FontSize" Value="15" />
+  </Style>
+  <Style Selector="Border.chat-separator">
+    <Setter Property="Height" Value="1" />
+    <Setter Property="Background" Value="{StaticResource BorderSubtleBrush}" />
+    <Setter Property="Margin" Value="0,14" />
+  </Style>
+  <Style Selector="TextBlock.chat-message-state">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontStyle" Value="Italic" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="Margin" Value="0,10,0,0" />
+  </Style>
+  <Style Selector="StackPanel.chat-message-actions">
+    <Setter Property="Margin" Value="0,10,0,0" />
+    <Setter Property="Opacity" Value="0.82" />
+  </Style>
+  <Style Selector="Button.inline-action">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="Padding" Value="7,5" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+  <Style Selector="Button.inline-action:pointerover">
+    <Setter Property="Background" Value="{StaticResource InteractiveHoverBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="Border.chat-job-context">
+    <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="12,10" />
+  </Style>
+  <Style Selector="Border.live-dot">
+    <Setter Property="Width" Value="8" />
+    <Setter Property="Height" Value="8" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBlock.chat-job-title">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="TextBlock.chat-job-detail">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+  </Style>
+  <Style Selector="Border.chat-composer">
+    <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BorderStrongBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="13" />
+    <Setter Property="Padding" Value="12" />
+  </Style>
+  <Style Selector="TextBox.chat-composer-input">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="Padding" Value="5,4" />
+  </Style>
+  <Style Selector="TextBox.chat-composer-input:focus">
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="Button.composer-tool, ToggleButton.mode-toggle">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Padding" Value="9,7" />
+    <Setter Property="MinHeight" Value="34" />
+  </Style>
+  <Style Selector="Button.composer-tool:pointerover, ToggleButton.mode-toggle:pointerover">
+    <Setter Property="Background" Value="{StaticResource InteractiveHoverBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.mode-toggle:checked">
+    <Setter Property="Background" Value="{StaticResource InteractiveSelectedBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="Button.composer-primary">
+    <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="#071012" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Padding" Value="15,8" />
+    <Setter Property="MinHeight" Value="34" />
+  </Style>
+  <Style Selector="Button.stop-action">
+    <Setter Property="Background" Value="{StaticResource ErrorBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="#160A0D" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Padding" Value="14,8" />
+    <Setter Property="MinHeight" Value="34" />
+  </Style>
+  <Style Selector="Border.context-chip">
+    <Setter Property="Background" Value="{StaticResource InteractiveSelectedBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource AccentMutedBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="9,4" />
+    <Setter Property="Margin" Value="2" />
+  </Style>
+  <Style Selector="TextBlock.context-chip-label">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="Button.chip-remove">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="Padding" Value="1" />
+  </Style>
+  <Style Selector="Border.chat-suggestions">
+    <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="5" />
+    <Setter Property="MaxHeight" Value="260" />
+  </Style>
+  <Style Selector="Button.chat-suggestion-item">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="Padding" Value="10,8" />
+  </Style>
+  <Style Selector="Button.chat-suggestion-item:pointerover">
+    <Setter Property="Background" Value="{StaticResource InteractiveHoverBrush}" />
+  </Style>
+  <Style Selector="TextBlock.suggestion-prefix">
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    <Setter Property="FontSize" Value="14" />
+  </Style>
+  <Style Selector="TextBlock.suggestion-label">
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    <Setter Property="FontSize" Value="13" />
+  </Style>
+  <Style Selector="TextBlock.suggestion-detail, TextBlock.suggestion-value">
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+  <Style Selector="Button.latest-button">
+    <Setter Property="Background" Value="{StaticResource SurfaceOverlayBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource AccentMutedBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    <Setter Property="Padding" Value="12,7" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="VerticalAlignment" Value="Bottom" />
+    <Setter Property="Margin" Value="0,0,16,16" />
+  </Style>
   <Style Selector="TextBlock.chat-state">
     <Setter Property="FontSize" Value="9" />
     <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
@@ -165,18 +530,6 @@
   </Style>
   <Style Selector="TextBlock.prompt">
     <Setter Property="FontSize" Value="16" />
-    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-  </Style>
-  <Style Selector="Button.rail-button">
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
-    <Setter Property="BorderThickness" Value="0" />
-    <Setter Property="HorizontalContentAlignment" Value="Center" />
-    <Setter Property="Padding" Value="0" />
-    <Setter Property="Height" Value="36" />
-  </Style>
-  <Style Selector="Button.rail-button:pointerover, Button.rail-button.active">
-    <Setter Property="Background" Value="{StaticResource SelectionBrush}" />
     <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
   </Style>
   <Style Selector="Button.view-button, Button.quiet-button">

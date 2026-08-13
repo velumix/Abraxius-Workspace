@@ -2,84 +2,31 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Abraxius.App"
              xmlns:controls="using:Abraxius.App"
+             xmlns:chat="using:Abraxius.App.Views.Chat"
+             xmlns:shell="using:Abraxius.App.Views.Shell"
              x:Class="Abraxius.App.MainView"
              x:Name="Root"
              x:DataType="vm:MainViewModel"
              SizeChanged="OnSizeChanged"
              KeyDown="OnRootKeyDown">
   <Panel Background="{StaticResource BackgroundBrush}">
-    <Grid RowDefinitions="Auto,*,Auto,Auto" ColumnDefinitions="52,*,320" RowSpacing="1" ColumnSpacing="1">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" ColumnDefinitions="Auto,*,Auto" RowSpacing="1" ColumnSpacing="1">
       <Border Grid.Row="0" Grid.ColumnSpan="3" Classes="topbar">
-        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="14">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14">
           <TextBlock Text="◈ ABRAXIUS" Classes="brand" />
           <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
             <TextBlock Text="{Binding ProjectText}" Classes="context-text" />
             <TextBlock Text="{Binding MissionText}" Classes="context-text" />
           </StackPanel>
-          <TextBlock Grid.Column="2" Text="● LATTICE" Classes="system-status" />
-          <TextBlock Grid.Column="3" Text="{Binding IntelligenceText}" Classes="system-status" />
-          <TextBlock Grid.Column="4" Text="{Binding CpuText}" Classes="system-status" />
-          <TextBlock Grid.Column="5" Text="{Binding VoiceStatus}" Classes="system-status" />
-          <TextBlock Grid.Column="6" Text="{Binding UpdateStatusText}" Classes="system-status" />
-          <TextBlock Grid.Column="7" Text="{Binding Status}" Classes="status" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+            <TextBlock Text="● LATTICE" Classes="system-status" />
+            <TextBlock Text="{Binding IntelligenceText}" Classes="system-status" />
+          </StackPanel>
+          <TextBlock Grid.Column="3" Text="{Binding Status}" Classes="status" />
         </Grid>
       </Border>
 
-      <Border Grid.Row="1" Grid.Column="0" Classes="rail">
-        <StackPanel Spacing="6">
-          <Button Classes="rail-button active" Command="{Binding SelectMissionCommand}" ToolTip.Tip="Mission">
-            <TextBlock Text="◉" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectChatCommand}" ToolTip.Tip="Chat">
-            <TextBlock Text="◌" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectAgentsCommand}" ToolTip.Tip="Agents">
-            <TextBlock Text="◫" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectTerminalCommand}" ToolTip.Tip="Terminal">
-            <TextBlock Text="⌘" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectDiagnosticsCommand}" ToolTip.Tip="Diagnostics">
-            <TextBlock Text="◇" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectMemoryCommand}" ToolTip.Tip="Memory">
-            <TextBlock Text="◌" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectSkillsCommand}" ToolTip.Tip="Skills">
-            <TextBlock Text="⚒" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectProgressionCommand}" ToolTip.Tip="Progression">
-            <TextBlock Text="◈" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectArtifactsCommand}" ToolTip.Tip="Artifacts &amp; Review">
-            <TextBlock Text="▱" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectEvaluationCommand}" ToolTip.Tip="Evaluation Lab">
-            <TextBlock Text="∿" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectFabricCommand}" ToolTip.Tip="Fabric">
-            <TextBlock Text="⌁" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectComputeCommand}" ToolTip.Tip="Compute">
-            <TextBlock Text="▦" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectExtensionsCommand}" ToolTip.Tip="Extensions">
-            <TextBlock Text="⊞" />
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectNeedsYouCommand}" ToolTip.Tip="Needs You">
-            <Grid><TextBlock Text="!" /><Border Background="#C98A58" CornerRadius="8" MinWidth="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12,-8,-8,0" IsVisible="{Binding HasNeedsYou}"><TextBlock Text="{Binding NeedsYouCount}" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border></Grid>
-          </Button>
-          <Button Classes="rail-button" Command="{Binding SelectSecurityCommand}" ToolTip.Tip="Security"><TextBlock Text="◇" /></Button>
-          <Button Classes="rail-button" Command="{Binding SelectDebriefCommand}" ToolTip.Tip="Debrief">
-            <TextBlock Text="◍" />
-          </Button>
-          <Border Height="1" Background="{StaticResource LineBrush}" Margin="8,6" />
-          <Button Classes="rail-button quiet" Command="{Binding OpenCommandPaletteCommand}" ToolTip.Tip="Commands (Ctrl/Cmd+K)">
-            <TextBlock Text="⌕" />
-          </Button>
-          <Button Classes="rail-button quiet" Command="{Binding SelectSettingsCommand}" ToolTip.Tip="Background &amp; Notifications"><TextBlock Text="⚙" /></Button>
-        </StackPanel>
-      </Border>
+      <shell:NavigationRail Grid.Row="1" Grid.Column="0" />
 
       <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Classes="workspace">
         <Border.ContextMenu>
@@ -199,56 +146,7 @@
             </ScrollViewer>
           </Border>
         </Grid>
-        <Border Classes="workspace chat-workspace" IsVisible="{Binding IsChatVisible}">
-          <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
-              <StackPanel Spacing="2">
-                <TextBlock Text="CHAT ROOM" Classes="section-label" />
-                <TextBlock Text="Talk with Abraxius directly" Classes="mission-title" />
-                <TextBlock Text="Conversation is separate from mission execution. Use Run as mission when you want the scheduler to act." Classes="muted" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding Chat.JobStatus}" Classes="state-text" Margin="0,6,0,0" />
-                <TextBlock Text="{Binding Chat.JobDetail}" Classes="muted" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding Chat.JobExecution}" Classes="muted" />
-              </StackPanel>
-              <TextBlock Grid.Column="1" Text="{Binding Chat.Status}" Classes="state-text" VerticalAlignment="Center" />
-              <Button Grid.Column="2" Content="CLEAR" Classes="quiet-button" Command="{Binding Chat.ClearCommand}" />
-              <Button Grid.Column="3" Content="RUN AS MISSION" Classes="primary" Command="{Binding RunChatAsMissionCommand}" IsEnabled="{Binding Chat.CanSendToMission}" />
-            </Grid>
-            <ListBox Grid.Row="1" ItemsSource="{Binding Chat.Messages}" Classes="chat-list" ScrollViewer.VerticalScrollBarVisibility="Auto">
-              <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="vm:UiChatMessage">
-                  <Panel Margin="0,0,0,10">
-                    <Border IsVisible="{Binding IsAssistant}" HorizontalAlignment="Left" Classes="chat-bubble assistant">
-                      <StackPanel Spacing="5">
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                          <TextBlock Text="{Binding Speaker}" Classes="chat-speaker" />
-                          <TextBlock Grid.Column="1" Text="{Binding TimeText}" Classes="event-time" />
-                        </Grid>
-                        <TextBlock Text="{Binding Text}" Classes="chat-text" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding StateText}" Classes="chat-state" IsVisible="{Binding IsStreaming}" />
-                      </StackPanel>
-                    </Border>
-                    <Border IsVisible="{Binding IsUser}" HorizontalAlignment="Right" Classes="chat-bubble user">
-                      <StackPanel Spacing="5">
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                          <TextBlock Text="{Binding Speaker}" Classes="chat-speaker" />
-                          <TextBlock Grid.Column="1" Text="{Binding TimeText}" Classes="event-time" />
-                        </Grid>
-                        <TextBlock Text="{Binding Text}" Classes="chat-text" TextWrapping="Wrap" />
-                      </StackPanel>
-                    </Border>
-                  </Panel>
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-            </ListBox>
-            <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
-              <TextBox x:Name="ChatInput" Text="{Binding Chat.Input, Mode=TwoWay}" Classes="command-input" AcceptsReturn="True" MinHeight="54" MaxHeight="140" TextWrapping="Wrap" PlaceholderText="Message Abraxius…" />
-              <Button Grid.Column="1" Content="SEND  ↵" Classes="primary" Command="{Binding Chat.SendCommand}" />
-              <Button Grid.Column="2" Content="RUN JOB" Classes="primary" Command="{Binding RunChatAsMissionCommand}" IsEnabled="{Binding Chat.CanSendToMission}" />
-              <Button Grid.Column="3" Content="CANCEL" Classes="quiet-button" Command="{Binding Chat.CancelCommand}" IsVisible="{Binding Chat.IsSending}" />
-            </Grid>
-          </Grid>
-        </Border>
+        <chat:ChatView IsVisible="{Binding IsChatVisible}" />
         <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsDiagnosticsVisible}">
           <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="12">

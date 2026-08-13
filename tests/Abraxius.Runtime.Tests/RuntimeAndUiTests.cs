@@ -153,6 +153,77 @@ public sealed class RuntimeAndUiTests
     }
 
     [Fact]
+    public async Task ChatStreamingBufferCoalescesFastTokensWithoutChangingFinalText()
+    {
+        var dispatcher = new CountingDispatcher();
+        var visible = new List<string>();
+        await using var buffer = new ChatStreamingBuffer(dispatcher, text => visible.Add(text), TimeSpan.FromMilliseconds(40));
+
+        for (var i = 0; i < 500; i++)
+        {
+            buffer.Append("token ");
+        }
+
+        var final = await buffer.CompleteAsync();
+
+        Assert.Equal(500 * "token ".Length, final.Length);
+        Assert.Equal(final, visible[^1]);
+        Assert.True(dispatcher.PostCount <= 2);
+        Assert.True(buffer.FlushCount <= 2);
+    }
+
+    [Fact]
+    public void ChatMarkdownProducesSafeTypedBlocks()
+    {
+        var blocks = ChatMarkdownParser.Parse("# Heading\n\n- one\n- two\n\n```csharp\nreturn 1;\n```\n\n<script>alert('x')</script>");
+
+        Assert.Contains(blocks, static block => block is ChatHeadingBlock);
+        Assert.Contains(blocks, static block => block is ChatListBlock);
+        Assert.Contains(blocks, static block => block is ChatCodeFenceBlock);
+        Assert.DoesNotContain(blocks, static block => block is null);
+    }
+
+    [Fact]
+    public async Task ChatComposerSupportsSpecialistSuggestionsContextAndMissionMode()
+    {
+        var chat = new ChatViewModel(new MockModelProvider(TimeSpan.Zero), new CountingDispatcher(), ["Athena", "Orion"]);
+
+        chat.Input = "@Or";
+        Assert.Contains(chat.Suggestions, static suggestion => suggestion.Value == "Orion");
+        chat.SelectSuggestionCommand.Execute(chat.Suggestions.Single(static suggestion => suggestion.Value == "Orion"));
+        Assert.Equal("Orion", chat.ActiveSpecialist);
+
+        chat.AddProjectContextCommand.Execute(null);
+        Assert.True(chat.HasContext);
+        chat.ToggleModeCommand.Execute(null);
+        Assert.True(chat.IsMissionMode);
+        Assert.True(chat.ShowRunAction);
+        Assert.False(chat.ShowSendAction);
+
+        await chat.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task NavigationSelectionHasOneStateDrivenActiveItem()
+    {
+        await using var runtime = AbraxiusRuntimeHost.CreateDefault(new RuntimeHostOptions(
+            UseFileEvidence: false, UseFileLedger: false, UseFileProgression: false,
+            UseFilePresence: false, UseFileSecurity: false));
+        await using var viewModel = new MainViewModel(runtime, dispatcher: new CountingDispatcher(), ownsRuntime: false);
+
+        viewModel.SelectRail(RailDestination.Chat);
+        var chat = viewModel.NavigationGroups.SelectMany(static group => group.Items).Single(static item => item.Destination == RailDestination.Chat);
+        var mission = viewModel.NavigationGroups.SelectMany(static group => group.Items).Single(static item => item.Destination == RailDestination.Mission);
+        Assert.True(chat.IsSelected);
+        Assert.False(mission.IsSelected);
+
+        viewModel.SelectRail(RailDestination.Mission);
+        Assert.False(chat.IsSelected);
+        Assert.True(mission.IsSelected);
+        Assert.Single(viewModel.NavigationGroups.SelectMany(static group => group.Items), static item => item.IsSelected);
+    }
+
+    [Fact]
     public void CommandSearchRanksTitleMatches()
     {
         var registry = new CommandRegistry();

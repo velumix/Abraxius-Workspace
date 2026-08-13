@@ -25,6 +25,8 @@
     <ProjectReference Include="../Abraxius.Plugins/Abraxius.Plugins.csproj" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Markdig" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Program.cs" />

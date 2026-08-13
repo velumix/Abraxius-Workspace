@@ -8,5 +8,5 @@ namespace Abraxius.App.iOS;
 public sealed class AppDelegate : AvaloniaAppDelegate<Abraxius.App.App>
 {
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder) =>
-        base.CustomizeAppBuilder(builder).LogToTrace();
+        base.CustomizeAppBuilder(builder).WithInterFont().LogToTrace();
 }

@@ -1,0 +1,197 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Abraxius.App"
+             x:Class="Abraxius.App.Views.Chat.ChatView"
+             x:Name="ChatRoot"
+             x:DataType="vm:MainViewModel">
+  <Border Classes="chat-surface">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="18">
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="14">
+        <StackPanel Spacing="3">
+          <TextBlock Text="Chat" Classes="chat-page-title" />
+          <TextBlock Text="Direct conversation with Abraxius" Classes="chat-page-subtitle" />
+        </StackPanel>
+        <TextBlock Grid.Column="1" Text="{Binding Chat.CompactStatus}" Classes="chat-header-status" VerticalAlignment="Center" />
+        <Button Grid.Column="2" Content="MORE" Classes="quiet-button chat-more-button" ToolTip.Tip="Chat actions" AutomationProperties.Name="Chat actions">
+          <Button.ContextMenu>
+            <ContextMenu DataContext="{Binding #ChatRoot.DataContext.Chat}">
+              <MenuItem Header="New chat" Command="{Binding ClearCommand}" />
+            </ContextMenu>
+          </Button.ContextMenu>
+        </Button>
+      </Grid>
+
+      <Grid Grid.Row="1">
+        <ScrollViewer x:Name="TranscriptScroller"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Hidden"
+                      ScrollChanged="OnTranscriptScrollChanged">
+          <Panel MinHeight="300">
+            <StackPanel IsVisible="{Binding Chat.IsEmpty}" Classes="chat-empty-state" HorizontalAlignment="Center" VerticalAlignment="Center">
+              <TextBlock Text="Ask Abraxius anything" Classes="chat-empty-title" HorizontalAlignment="Center" />
+              <TextBlock Text="Conversation is direct and does not execute work by itself." Classes="chat-empty-subtitle" HorizontalAlignment="Center" />
+              <WrapPanel HorizontalAlignment="Center" Margin="0,18,0,0">
+                <Button Content="@ specialist" Classes="suggestion-chip" Command="{Binding Chat.ToggleMentionSuggestionsCommand}" />
+                <Button Content="/ command" Classes="suggestion-chip" Command="{Binding Chat.ToggleCommandSuggestionsCommand}" />
+                <Button Content="+ context" Classes="suggestion-chip" Command="{Binding Chat.AddProjectContextCommand}" />
+              </WrapPanel>
+            </StackPanel>
+
+            <ListBox ItemsSource="{Binding Chat.Messages}"
+                     Classes="chat-transcript"
+                     IsVisible="{Binding Chat.HasMessages}">
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:ChatMessageViewModel">
+                  <Panel Classes="chat-turn">
+                    <Border IsVisible="{Binding IsUser}" Classes="chat-user-message" HorizontalAlignment="Right" MaxWidth="660">
+                      <StackPanel Spacing="7">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                          <TextBlock Text="{Binding Speaker}" Classes="chat-speaker" />
+                          <TextBlock Grid.Column="1" Text="{Binding TimeText}" Classes="chat-meta" />
+                        </Grid>
+                        <SelectableTextBlock Text="{Binding Text}" Classes="chat-user-text" TextWrapping="Wrap" />
+                      </StackPanel>
+                    </Border>
+
+                    <StackPanel IsVisible="{Binding IsAssistant}" Classes="chat-assistant-message" MaxWidth="920" HorizontalAlignment="Center">
+                      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Border Classes="assistant-mark"><TextBlock Text="A" /></Border>
+                        <TextBlock Grid.Column="1" Text="{Binding Speaker}" Classes="chat-assistant-speaker" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="{Binding TimeText}" Classes="chat-meta" VerticalAlignment="Center" />
+                      </Grid>
+
+                      <SelectableTextBlock Text="{Binding Text}" Classes="chat-streaming-text" TextWrapping="Wrap" IsVisible="{Binding IsStreaming}" />
+                      <ItemsControl ItemsSource="{Binding ContentBlocks}" Classes="chat-content" IsVisible="{Binding IsComplete}">
+                        <ItemsControl.DataTemplates>
+                          <DataTemplate x:DataType="vm:ChatParagraphBlock">
+                            <SelectableTextBlock Text="{Binding Text}" Classes="chat-paragraph" TextWrapping="Wrap" />
+                          </DataTemplate>
+                          <DataTemplate x:DataType="vm:ChatHeadingBlock">
+                            <SelectableTextBlock Text="{Binding Text}" Classes="chat-heading" TextWrapping="Wrap" />
+                          </DataTemplate>
+                          <DataTemplate x:DataType="vm:ChatListBlock">
+                            <ItemsControl ItemsSource="{Binding Items}" Classes="chat-list-block">
+                              <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <TextBlock Text="•" Classes="chat-list-marker" />
+                                    <SelectableTextBlock Grid.Column="1" Text="{Binding}" Classes="chat-paragraph" TextWrapping="Wrap" />
+                                  </Grid>
+                                </DataTemplate>
+                              </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                          </DataTemplate>
+                          <DataTemplate x:DataType="vm:ChatQuoteBlock">
+                            <Border Classes="chat-quote">
+                              <SelectableTextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                            </Border>
+                          </DataTemplate>
+                          <DataTemplate x:DataType="vm:ChatCodeFenceBlock">
+                            <Border Classes="chat-code-block">
+                              <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                  <TextBlock Text="{Binding Language, FallbackValue=CODE}" Classes="chat-code-language" />
+                                  <Button Grid.Column="1" Content="COPY" Classes="inline-action" Tag="{Binding Code}" Click="OnCopyBlock" />
+                                </Grid>
+                                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                  <SelectableTextBlock Text="{Binding Code}" Classes="chat-code" TextWrapping="NoWrap" />
+                                </ScrollViewer>
+                              </Grid>
+                            </Border>
+                          </DataTemplate>
+                          <DataTemplate x:DataType="vm:ChatLinkBlock">
+                            <SelectableTextBlock Text="{Binding Text}" Classes="chat-link" TextWrapping="Wrap" />
+                          </DataTemplate>
+                          <DataTemplate x:DataType="vm:ChatSeparatorBlock">
+                            <Border Classes="chat-separator" />
+                          </DataTemplate>
+                        </ItemsControl.DataTemplates>
+                      </ItemsControl>
+                      <TextBlock Text="{Binding StateText}" Classes="chat-message-state" IsVisible="{Binding IsStreaming}" />
+                      <StackPanel Orientation="Horizontal" Spacing="4" Classes="chat-message-actions" IsVisible="{Binding IsComplete}">
+                        <Button Content="COPY" Classes="inline-action" Tag="{Binding RawModelText}" Click="OnCopyMessage" />
+                      </StackPanel>
+                    </StackPanel>
+                  </Panel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Panel>
+        </ScrollViewer>
+        <Button x:Name="LatestButton" Content="↓  Latest" Classes="latest-button" IsVisible="False" Click="OnLatestClicked" AutomationProperties.Name="Jump to latest message" />
+      </Grid>
+
+      <Grid Grid.Row="2" RowDefinitions="Auto,Auto">
+        <Border Grid.Row="0" Classes="chat-job-context" IsVisible="{Binding Chat.HasActiveJob}">
+          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+            <Border Classes="live-dot" />
+            <StackPanel Grid.Column="1" Spacing="2">
+              <TextBlock Text="{Binding Chat.JobStatus}" Classes="chat-job-title" />
+              <TextBlock Text="{Binding Chat.JobDetail}" Classes="chat-job-detail" TextWrapping="Wrap" />
+            </StackPanel>
+            <Button Grid.Column="2" Content="OPEN MISSION" Classes="inline-action" Command="{Binding SelectMissionCommand}" />
+          </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto" RowSpacing="6" Margin="0,10,0,0">
+          <Border Grid.Row="0" Classes="chat-suggestions" IsVisible="{Binding Chat.HasSuggestions}">
+            <ItemsControl ItemsSource="{Binding Chat.Suggestions}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ChatSuggestion">
+                  <Button Classes="chat-suggestion-item" Command="{Binding #ChatRoot.DataContext.Chat.SelectSuggestionCommand}" CommandParameter="{Binding}">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                      <TextBlock Text="{Binding Prefix}" Classes="suggestion-prefix" />
+                      <StackPanel Grid.Column="1" Spacing="2">
+                        <TextBlock Text="{Binding Label}" Classes="suggestion-label" />
+                        <TextBlock Text="{Binding Detail}" Classes="suggestion-detail" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="2" Text="{Binding Value}" Classes="suggestion-value" />
+                    </Grid>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Border>
+
+          <Border Grid.Row="1" Classes="chat-composer">
+            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+              <ItemsControl ItemsSource="{Binding Chat.ContextChips}" IsVisible="{Binding Chat.HasContext}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ChatContextChip">
+                    <Border Classes="context-chip">
+                      <StackPanel Orientation="Horizontal" Spacing="5">
+                        <TextBlock Text="{Binding Label}" Classes="context-chip-label" />
+                        <Button Content="×" Classes="chip-remove" Command="{Binding #ChatRoot.DataContext.Chat.RemoveContextCommand}" CommandParameter="{Binding}" AutomationProperties.Name="Remove context" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <TextBox Grid.Row="1" x:Name="ChatInput" Text="{Binding Chat.Input, Mode=TwoWay}" Classes="chat-composer-input" AcceptsReturn="True" MinHeight="54" MaxHeight="170" TextWrapping="Wrap" PlaceholderText="{Binding Chat.ComposerPlaceholder}" />
+              <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto,Auto" ColumnSpacing="6">
+                <Button Content="+" Classes="composer-tool" Command="{Binding Chat.AddProjectContextCommand}" ToolTip.Tip="Add context" AutomationProperties.Name="Add context" />
+                <Button Grid.Column="1" Content="#" Classes="composer-tool" Command="{Binding Chat.AddProjectContextCommand}" ToolTip.Tip="Add project context" AutomationProperties.Name="Add project context" />
+                <Button Grid.Column="2" Content="@" Classes="composer-tool" Command="{Binding Chat.ToggleMentionSuggestionsCommand}" ToolTip.Tip="Mention specialist" AutomationProperties.Name="Mention specialist" />
+                <Button Grid.Column="3" Content="/" Classes="composer-tool" Command="{Binding Chat.ToggleCommandSuggestionsCommand}" ToolTip.Tip="Open commands" AutomationProperties.Name="Open chat commands" />
+                <Button Grid.Column="4" Content="VOICE" Classes="composer-tool" Command="{Binding ToggleVoiceCommand}" ToolTip.Tip="Voice input" AutomationProperties.Name="Voice input" />
+                <ToggleButton Grid.Column="5" Content="{Binding Chat.ModeLabel}" Classes="mode-toggle" Command="{Binding Chat.ToggleModeCommand}" AutomationProperties.Name="Toggle Chat or Mission mode" />
+                <Button Grid.Column="6" Content="STOP" Classes="stop-action" Command="{Binding Chat.CancelCommand}" IsVisible="{Binding Chat.IsSending}" AutomationProperties.Name="Stop response" />
+                <Button Grid.Column="7" Content="SEND" Classes="composer-primary" Command="{Binding Chat.SendCommand}" IsVisible="{Binding Chat.ShowSendAction}" />
+                <Button Grid.Column="7" Content="RUN" Classes="composer-primary" Command="{Binding RunChatAsMissionCommand}" IsVisible="{Binding Chat.ShowRunAction}" IsEnabled="{Binding Chat.CanSendToMission}" />
+              </Grid>
+            </Grid>
+          </Border>
+        </Grid>
+      </Grid>
+    </Grid>
+  </Border>
+</UserControl>

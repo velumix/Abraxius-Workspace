@@ -10,5 +10,6 @@ public static class Program
 
     public static AppBuilder BuildAvaloniaApp() =>
         AppBuilder.Configure<Abraxius.App.App>()
+            .WithInterFont()
             .LogToTrace();
 }

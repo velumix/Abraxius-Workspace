@@ -8,20 +8,6 @@ using Abraxius.Protocol;
 
 namespace Abraxius.App;
 
-public sealed record UiChatMessage(
-    Guid Id,
-    string Speaker,
-    string Text,
-    DateTimeOffset Timestamp,
-    bool IsUser,
-    bool IsStreaming = false,
-    bool IsError = false)
-{
-    public string TimeText => Timestamp.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture);
-    public string StateText => IsStreaming ? "TYPING" : IsError ? "ERROR" : string.Empty;
-    public bool IsAssistant => !IsUser;
-}
-
 /// <summary>Conversation state for the dedicated chat room. Mission execution remains an explicit action.</summary>
 public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
 {
@@ -37,24 +23,45 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
     private string _jobDetail = "Chat is ready. Use Run as mission when you want Abraxius to execute work.";
     private string _jobExecution = "";
     private string _queuedObjective = string.Empty;
+    private ChatMode _mode;
+    private string _activeSpecialist = string.Empty;
+    private IReadOnlyList<ChatSuggestion> _suggestions = [];
+    private Func<string, IReadOnlyList<ChatSuggestion>>? _commandSearch;
+    private readonly IReadOnlyList<string> _specialistNames;
     private bool _isSending;
     private int _disposed;
 
-    public ChatViewModel(IModelProvider model, IUiDispatcher dispatcher)
+    public ChatViewModel(IModelProvider model, IUiDispatcher dispatcher, IEnumerable<string>? specialistNames = null)
     {
         _model = model ?? throw new ArgumentNullException(nameof(model));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _specialistNames = specialistNames?.Where(static name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(static name => name, StringComparer.OrdinalIgnoreCase).ToArray()
+            ?? ["Athena", "Orion", "Daedalus", "Argus"];
         SendCommand = new AsyncRelayCommand(SendAsync, () => !IsSending && !string.IsNullOrWhiteSpace(Input));
         CancelCommand = new RelayCommand(_ => Cancel(), () => IsSending);
         ClearCommand = new RelayCommand(_ => Clear());
+        ToggleModeCommand = new RelayCommand(_ => IsMissionMode = !IsMissionMode);
+        AddProjectContextCommand = new RelayCommand(_ => AddProjectContext());
+        RemoveContextCommand = new RelayCommand(parameter => RemoveContext(parameter as ChatContextChip));
+        ToggleMentionSuggestionsCommand = new RelayCommand(_ => ToggleSuggestions('@'));
+        ToggleCommandSuggestionsCommand = new RelayCommand(_ => ToggleSuggestions('/'));
+        SelectSuggestionCommand = new RelayCommand(parameter => SelectSuggestion(parameter as ChatSuggestion));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public ObservableCollection<UiChatMessage> Messages { get; } = [];
+    public ObservableCollection<ChatMessageViewModel> Messages { get; } = [];
+    public ObservableCollection<ChatContextChip> ContextChips { get; } = [];
+    public bool HasContext => ContextChips.Count > 0;
     public ICommand SendCommand { get; }
     public ICommand CancelCommand { get; }
     public ICommand ClearCommand { get; }
+    public ICommand ToggleModeCommand { get; }
+    public ICommand AddProjectContextCommand { get; }
+    public ICommand RemoveContextCommand { get; }
+    public ICommand ToggleMentionSuggestionsCommand { get; }
+    public ICommand ToggleCommandSuggestionsCommand { get; }
+    public ICommand SelectSuggestionCommand { get; }
     public string Input
     {
         get => _input;
@@ -62,19 +69,49 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
         {
             if (!SetProperty(ref _input, value)) return;
             (SendCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+            UpdateSuggestions();
         }
     }
+
+    public ChatMode Mode
+    {
+        get => _mode;
+        private set
+        {
+            if (!SetProperty(ref _mode, value)) return;
+            OnPropertyChanged(nameof(IsMissionMode));
+            OnPropertyChanged(nameof(ModeLabel));
+            OnPropertyChanged(nameof(ComposerPlaceholder));
+            OnPropertyChanged(nameof(ShowSendAction));
+            OnPropertyChanged(nameof(ShowRunAction));
+        }
+    }
+    public bool IsMissionMode { get => Mode == ChatMode.Mission; private set => Mode = value ? ChatMode.Mission : ChatMode.Chat; }
+    public string ModeLabel => IsMissionMode ? "Mission" : "Chat";
+    public string ComposerPlaceholder => IsMissionMode ? "Describe the mission Abraxius should execute…" : "Ask Abraxius…";
+    public string ActiveSpecialist { get => _activeSpecialist; private set => SetProperty(ref _activeSpecialist, value); }
+    public IReadOnlyList<ChatSuggestion> Suggestions { get => _suggestions; private set { if (!SetProperty(ref _suggestions, value)) return; OnPropertyChanged(nameof(HasSuggestions)); } }
+    public bool HasSuggestions => Suggestions.Count > 0;
 
     public string Status
     {
         get => _status;
-        private set => SetProperty(ref _status, value);
+        private set
+        {
+            if (!SetProperty(ref _status, value)) return;
+            OnPropertyChanged(nameof(CompactStatus));
+        }
     }
 
     public string JobStatus
     {
         get => _jobStatus;
-        private set => SetProperty(ref _jobStatus, value);
+        private set
+        {
+            if (!SetProperty(ref _jobStatus, value)) return;
+            OnPropertyChanged(nameof(CompactStatus));
+            OnPropertyChanged(nameof(HasActiveJob));
+        }
     }
 
     public string JobDetail
@@ -89,6 +126,11 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
         private set => SetProperty(ref _jobExecution, value);
     }
 
+    public string CompactStatus => IsSending ? "Thinking…" : JobStatus != "NO ACTIVE JOB" ? JobStatus : Status.Contains("ERROR", StringComparison.OrdinalIgnoreCase) ? "Needs attention" : "Ready";
+    public bool HasActiveJob => JobStatus != "NO ACTIVE JOB";
+    public bool ShowSendAction => !IsSending && !IsMissionMode;
+    public bool ShowRunAction => !IsSending && IsMissionMode;
+
     public bool IsSending
     {
         get => _isSending;
@@ -98,10 +140,14 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
             (SendCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
             (CancelCommand as RelayCommand)?.RaiseCanExecuteChanged();
             OnPropertyChanged(nameof(CanSendToMission));
+            OnPropertyChanged(nameof(CompactStatus));
+            OnPropertyChanged(nameof(ShowSendAction));
+            OnPropertyChanged(nameof(ShowRunAction));
         }
     }
 
     public bool HasMessages => Messages.Count > 0;
+    public bool IsEmpty => !HasMessages;
     public bool CanSendToMission => !IsSending && !string.IsNullOrWhiteSpace(LatestUserText);
     public string? LatestUserText => _history.LastOrDefault(item => item.IsUser).Text is { } text ? text : null;
 
@@ -111,19 +157,20 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
         if (text.Length == 0 || IsSending) return;
 
         Input = string.Empty;
-        var userMessage = new UiChatMessage(Guid.NewGuid(), "YOU", text, DateTimeOffset.UtcNow, true);
+        var userMessage = new ChatMessageViewModel(Guid.NewGuid(), "YOU", text, DateTimeOffset.UtcNow, true);
         AddMessage(userMessage);
         _history.Add((true, text));
         TrimHistory();
 
         var assistantId = Guid.NewGuid();
-        AddMessage(new UiChatMessage(assistantId, "ABRAXIUS", "Thinking…", DateTimeOffset.UtcNow, false, IsStreaming: true));
+        var assistantMessage = new ChatMessageViewModel(assistantId, string.IsNullOrWhiteSpace(ActiveSpecialist) ? "ABRAXIUS" : $"ABRAXIUS · {ActiveSpecialist.ToUpperInvariant()}", "Thinking…", DateTimeOffset.UtcNow, false, isStreaming: true);
+        AddMessage(assistantMessage);
         IsSending = true;
         Status = "THINKING · STREAMING RESPONSE";
         using var cancellation = new CancellationTokenSource();
         _sendCancellation = cancellation;
 
-        var response = new System.Text.StringBuilder();
+        await using var streaming = new ChatStreamingBuffer(_dispatcher, output => ReplaceMessageText(assistantId, output));
         try
         {
             var request = new ModelRequest(
@@ -148,12 +195,10 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
                 switch (item)
                 {
                     case ModelStreamEvent.Token token:
-                        response.Append(token.Text);
-                        ReplaceMessage(assistantId, current => current with { Text = response.ToString() });
+                        streaming.Append(token.Text);
                         break;
-                    case ModelStreamEvent.Completed completed when response.Length == 0:
-                        response.Append(completed.Result.Text);
-                        ReplaceMessage(assistantId, current => current with { Text = response.ToString() });
+                    case ModelStreamEvent.Completed completed when streaming.Text.Length == 0:
+                        streaming.Append(completed.Result.Text);
                         break;
                     case ModelStreamEvent.Completed:
                         break;
@@ -162,37 +207,30 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
 
             // A few compatible gateways advertise streaming but return an empty stream.
             // Recover through the normal request path so the chat never ends on a blank bubble.
-            if (response.Length == 0)
+            if (streaming.Text.Length == 0)
             {
                 var fallback = await _model.InferAsync(request with { Stream = false }, cancellation.Token);
-                response.Append(fallback.Text);
+                streaming.Append(fallback.Text);
             }
 
-            var finalText = response.ToString().Trim();
+            var finalText = (await streaming.CompleteAsync()).Trim();
             if (finalText.Length == 0) finalText = "I didn’t receive a response from the model.";
-            ReplaceMessage(assistantId, current => current with { Text = finalText, IsStreaming = false });
+            ReplaceMessageComplete(assistantId, finalText);
             _history.Add((false, finalText));
             TrimHistory();
             Status = "READY · RESPONSE COMPLETE";
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
-            var partial = response.ToString().Trim();
-            ReplaceMessage(assistantId, current => current with
-            {
-                Text = partial.Length == 0 ? "Response cancelled." : $"{partial}\n\n[response cancelled]",
-                IsStreaming = false
-            });
+            var partial = streaming.Text.Trim();
+            await streaming.CompleteAsync();
+            ReplaceMessageComplete(assistantId, partial.Length == 0 ? "Response cancelled." : $"{partial}\n\n[response cancelled]", cancelled: true);
             Status = "READY · RESPONSE CANCELLED";
         }
         catch (Exception exception)
         {
-            ReplaceMessage(assistantId, current => current with
-            {
-                Text = $"I couldn’t answer that: {exception.Message}",
-                IsStreaming = false,
-                IsError = true
-            });
+            await streaming.CompleteAsync();
+            ReplaceMessageComplete(assistantId, $"I couldn’t answer that: {exception.Message}", error: true);
             Status = "MODEL ERROR · CHECK ROUTE OR COMPUTE";
         }
         finally
@@ -206,15 +244,105 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
 
     public void Cancel() => _sendCancellation?.Cancel();
 
+    /// <summary>Moves the current composer text into the transcript when Mission mode is used.</summary>
+    public string? TakeMissionObjective()
+    {
+        var text = Input.Trim();
+        if (text.Length == 0) return LatestUserText;
+        Input = string.Empty;
+        AddMessage(new ChatMessageViewModel(Guid.NewGuid(), "YOU", text, DateTimeOffset.UtcNow, true));
+        _history.Add((true, text));
+        TrimHistory();
+        OnPropertyChanged(nameof(HasMessages));
+        OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(nameof(LatestUserText));
+        OnPropertyChanged(nameof(CanSendToMission));
+        return text;
+    }
+
+    public void SetCommandSearch(Func<string, IReadOnlyList<ChatSuggestion>> search) => _commandSearch = search;
+
     public void Clear()
     {
         if (IsSending) return;
         _history.Clear();
-        Messages.Clear();
-        Status = "READY · NEW CONVERSATION";
-        OnPropertyChanged(nameof(HasMessages));
+            Messages.Clear();
+            Status = "READY · NEW CONVERSATION";
+            OnPropertyChanged(nameof(HasMessages));
+            OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(LatestUserText));
         OnPropertyChanged(nameof(CanSendToMission));
+    }
+
+    private void AddProjectContext()
+    {
+        if (ContextChips.Any(static chip => chip.Id == "current-project")) return;
+        ContextChips.Add(new ChatContextChip("current-project", "Current project", "Project"));
+        OnPropertyChanged(nameof(ContextChips));
+        OnPropertyChanged(nameof(HasContext));
+    }
+
+    private void RemoveContext(ChatContextChip? chip)
+    {
+        if (chip is null) return;
+        ContextChips.Remove(chip);
+        OnPropertyChanged(nameof(ContextChips));
+        OnPropertyChanged(nameof(HasContext));
+    }
+
+    private void ToggleSuggestions(char prefix)
+    {
+        if (!Input.TrimStart().StartsWith(prefix))
+        {
+            Input = Input.TrimEnd() + prefix;
+        }
+        else
+        {
+            UpdateSuggestions(force: true);
+        }
+    }
+
+    private void SelectSuggestion(ChatSuggestion? suggestion)
+    {
+        if (suggestion is null) return;
+        var prefixIndex = Input.Contains(suggestion.Prefix, StringComparison.Ordinal)
+            ? Input.IndexOf(suggestion.Prefix, StringComparison.Ordinal)
+            : 0;
+        var leading = Input[..prefixIndex];
+        Input = leading + suggestion.Prefix + suggestion.Value + " ";
+        if (suggestion.Prefix == "@") ActiveSpecialist = suggestion.Value;
+        Suggestions = [];
+    }
+
+    private void UpdateSuggestions(bool force = false)
+    {
+        var value = Input.TrimStart();
+        if (value.StartsWith('@'))
+        {
+            var token = value[1..].Split(' ', '\t', '\r', '\n')[0];
+            if (force || token.Length > 0)
+            {
+                Suggestions = _specialistNames
+                    .Where(name => name.StartsWith(token, StringComparison.OrdinalIgnoreCase))
+                    .Take(6)
+                    .Select(name => new ChatSuggestion("@", name, $"@{name}", "Target this specialist directly"))
+                    .ToArray();
+                ActiveSpecialist = _specialistNames.FirstOrDefault(name => string.Equals(name, token, StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+                return;
+            }
+        }
+        else if (value.StartsWith('/'))
+        {
+            var token = value[1..].Split(' ', '\t', '\r', '\n')[0];
+            Suggestions = (_commandSearch?.Invoke(token) ?? [])
+                .Take(8)
+                .Select(command => new ChatSuggestion("/", command.Value, command.Label, command.Detail))
+                .ToArray();
+            return;
+        }
+
+        if (!force) ActiveSpecialist = string.Empty;
+        Suggestions = [];
     }
 
     public void UpdateMission(UiGraphSnapshot snapshot)
@@ -288,6 +416,20 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
             builder.AppendLine(turn.Text);
         }
 
+        if (!string.IsNullOrWhiteSpace(ActiveSpecialist))
+        {
+            builder.Append("TARGET SPECIALIST: ").Append(ActiveSpecialist).AppendLine();
+        }
+
+        if (ContextChips.Count > 0)
+        {
+            builder.AppendLine("EXPLICIT CONTEXT:");
+            foreach (var context in ContextChips)
+            {
+                builder.Append("- ").Append(context.Kind).Append(": ").Append(context.Label).AppendLine();
+            }
+        }
+
         builder.AppendLine("ABRAXIUS:");
         return builder.ToString();
     }
@@ -300,25 +442,30 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
         }
     }
 
-    private void AddMessage(UiChatMessage message)
+    private void AddMessage(ChatMessageViewModel message)
     {
         _dispatcher.Post(() =>
         {
             Messages.Add(message);
             OnPropertyChanged(nameof(HasMessages));
+            OnPropertyChanged(nameof(IsEmpty));
             OnPropertyChanged(nameof(LatestUserText));
             OnPropertyChanged(nameof(CanSendToMission));
         });
     }
 
-    private void ReplaceMessage(Guid id, Func<UiChatMessage, UiChatMessage> update)
+    private void ReplaceMessageText(Guid id, string text)
     {
         _dispatcher.Post(() =>
         {
-            var index = Messages.Select((message, index) => (message, index)).FirstOrDefault(item => item.message.Id == id).index;
-            if (index < 0 || index >= Messages.Count || Messages[index].Id != id) return;
-            Messages[index] = update(Messages[index]);
+            var message = Messages.FirstOrDefault(item => item.Id == id);
+            message?.UpdateStreamingText(text);
         });
+    }
+
+    private void ReplaceMessageComplete(Guid id, string text, bool error = false, bool cancelled = false)
+    {
+        _dispatcher.Post(() => Messages.FirstOrDefault(item => item.Id == id)?.Complete(text, error, cancelled));
     }
 
     private bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)

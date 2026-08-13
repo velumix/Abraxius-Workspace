@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Abraxius.App"
+             x:Class="Abraxius.App.Views.Shell.NavigationRail"
+             x:Name="RailRoot"
+             x:DataType="vm:MainViewModel"
+             Width="{Binding RailWidth}"
+             MinWidth="56"
+             HorizontalAlignment="Left">
+  <Border Classes="navigation-rail">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
+      <Border Classes="rail-brand" ToolTip.Tip="Abraxius">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+          <Border Classes="brand-mark"><TextBlock Text="A" /></Border>
+          <StackPanel Grid.Column="1" Spacing="1" IsVisible="{Binding #RailRoot.DataContext.IsRailExpanded}">
+            <TextBlock Text="ABRAXIUS" Classes="rail-brand-title" />
+            <TextBlock Text="AI WORKSTATION" Classes="rail-brand-caption" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
+        <ItemsControl ItemsSource="{Binding NavigationGroups}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:UiNavigationGroup">
+              <StackPanel Classes="rail-group" Spacing="3">
+                <TextBlock Text="{Binding Name}" Classes="rail-group-label" IsVisible="{Binding #RailRoot.DataContext.IsRailExpanded}" />
+                <ItemsControl ItemsSource="{Binding Items}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:UiNavigationItem">
+                      <ToggleButton Classes="rail-item"
+                                    IsChecked="{Binding IsSelected}"
+                                    Command="{Binding Command}"
+                                    ToolTip.Tip="{Binding Label}"
+                                    AutomationProperties.Name="{Binding Description}"
+                                    HorizontalContentAlignment="Stretch">
+                        <Grid ColumnDefinitions="44,* ,Auto" MinHeight="44">
+                          <PathIcon Data="{Binding IconData}" Width="19" Height="19" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                          <TextBlock Grid.Column="1" Text="{Binding Label}" Classes="rail-item-label" VerticalAlignment="Center" IsVisible="{Binding #RailRoot.DataContext.IsRailExpanded}" />
+                          <Border Grid.Column="2" Classes="rail-badge" IsVisible="{Binding HasBadge}" Margin="0,0,10,0">
+                            <TextBlock Text="{Binding BadgeText}" />
+                          </Border>
+                        </Grid>
+                      </ToggleButton>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+
+      <ToggleButton Grid.Row="2" Classes="rail-item rail-toggle"
+                    Command="{Binding ToggleRailCommand}"
+                    ToolTip.Tip="Expand or collapse navigation"
+                    AutomationProperties.Name="Expand or collapse navigation"
+                    HorizontalContentAlignment="Stretch">
+        <Grid ColumnDefinitions="44,*" MinHeight="44">
+          <PathIcon Data="{x:Static vm:NavigationIcons.RailToggle}" Width="19" Height="19" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          <TextBlock Grid.Column="1" Text="Collapse rail" Classes="rail-item-label" VerticalAlignment="Center" IsVisible="{Binding IsRailExpanded}" />
+        </Grid>
+      </ToggleButton>
+    </Grid>
+  </Border>
+</UserControl>

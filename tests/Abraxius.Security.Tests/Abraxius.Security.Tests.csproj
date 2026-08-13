@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><IsPackable>false</IsPackable><RootNamespace>Abraxius.Security.Tests</RootNamespace></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Abraxius.Security/Abraxius.Security.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Presence/Abraxius.Presence.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Runtime/Abraxius.Runtime.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Models/Abraxius.Models.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets><IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets></PackageReference>
+  </ItemGroup>
+</Project>

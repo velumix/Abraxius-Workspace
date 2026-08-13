@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Agents</RootNamespace>
+    <AssemblyName>Abraxius.Agents</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Protocol/Abraxius.Protocol.csproj" />
+    <ProjectReference Include="../Abraxius.Core/Abraxius.Core.csproj" />
+    <ProjectReference Include="../Abraxius.Axl/Abraxius.Axl.csproj" />
+    <ProjectReference Include="../Abraxius.Memory/Abraxius.Memory.csproj" />
+  </ItemGroup>
+</Project>

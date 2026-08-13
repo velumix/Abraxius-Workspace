@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Memory</RootNamespace>
+    <AssemblyName>Abraxius.Memory</AssemblyName>
+    <NoWarn>$(NoWarn);CA1305;CA1822;CA1859;CA1806</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Protocol/Abraxius.Protocol.csproj" />
+    <ProjectReference Include="../Abraxius.Core/Abraxius.Core.csproj" />
+    <ProjectReference Include="../Abraxius.Axl/Abraxius.Axl.csproj" />
+    <ProjectReference Include="../Abraxius.Models/Abraxius.Models.csproj" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
+  </ItemGroup>
+</Project>

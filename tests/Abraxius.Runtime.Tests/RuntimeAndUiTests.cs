@@ -1,0 +1,197 @@
+using Abraxius.App;
+using Abraxius.Agents;
+using Abraxius.Core;
+using Abraxius.Protocol;
+using Abraxius.Runtime;
+using Abraxius.Models;
+using Abraxius.Security;
+using Abraxius.Telemetry;
+using Xunit;
+
+namespace Abraxius.Runtime.Tests;
+
+public sealed class RuntimeAndUiTests
+{
+    [Fact]
+    public async Task ConfiguredModelCredentialIsRegisteredAsOpaqueBrokeredSecret()
+    {
+        var variable = $"ABRAXIUS_TEST_MODEL_SECRET_{Guid.NewGuid():N}";
+        var value = $"model-secret-{Guid.NewGuid():N}";
+        Environment.SetEnvironmentVariable(variable, value);
+        try
+        {
+            var intelligence = new IntelligenceFabricOptions
+            {
+                Frontier = new GatewayConnectionOptions
+                {
+                    Enabled = true,
+                    Endpoint = "https://models.example.test/v1/chat/completions",
+                    DefaultModel = "test-model",
+                    ApiKeyEnvironmentVariable = variable
+                }
+            };
+            await using var runtime = AbraxiusRuntimeHost.CreateDefault(new RuntimeHostOptions(
+                UseFileEvidence: false, UseFileLedger: false, UseFileProgression: false,
+                UseFilePresence: false, UseFileSecurity: false, Intelligence: intelligence));
+
+            var secrets = await runtime.Security.Secrets.ListAsync();
+            var metadata = Assert.Single(secrets, secret => secret.Reference == new SecretReference("secret://model/frontier"));
+            Assert.Equal(new SecretReference("secret://model/frontier"), metadata.Reference);
+            Assert.DoesNotContain(value, System.Text.Json.JsonSerializer.Serialize(metadata), StringComparison.Ordinal);
+            Assert.Contains(runtime.Security.Grants.ListActive(DateTimeOffset.UtcNow), grant =>
+                grant.Scope == GrantScope.Session && grant.ResourcePrefix == metadata.Reference.Value);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(variable, null);
+        }
+    }
+
+    [Fact]
+    public async Task FinalizedMissionFlowsIntoProgressionAsynchronously()
+    {
+        await using var runtime = AbraxiusRuntimeHost.CreateDefault(new RuntimeHostOptions(UseFileEvidence: false, UseFileLedger: false, UseFileProgression: false));
+        await runtime.StartAsync();
+        var rewarded = new TaskCompletionSource<Abraxius.Progression.MissionRewardRecord>(TaskCreationOptions.RunContinuationsAsynchronously);
+        runtime.Progression.RewardCommitted += (_, reward) => rewarded.TrySetResult(reward);
+
+        var mission = await runtime.RunMissionAsync(new Intent("@Orion find ExecutionGraph", CorrelationId.New()), explicitRole: SpecialistRole.Investigator);
+        var reward = await rewarded.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(mission.Mission.Id, reward.MissionId);
+        Assert.Equal(1, runtime.Progression.Snapshot.Career.Missions);
+        Assert.True(runtime.Progression.Snapshot.Specialists[SpecialistRole.Investigator].Experience > 0);
+    }
+
+    [Fact]
+    public async Task RuntimeDemoProducesSuccessfulCorrelatedExecution()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "abraxius-tests", Guid.NewGuid().ToString("N"));
+        await using var runtime = AbraxiusRuntimeHost.CreateDefault(new RuntimeHostOptions(
+            LedgerPath: Path.Combine(root, "events.jsonl"),
+            EvidencePath: Path.Combine(root, "evidence"),
+            UseFileEvidence: true));
+
+        var result = await runtime.RunDemoAsync();
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(6, result.Tasks.Count);
+        Assert.All(result.Tasks.Values, task => Assert.Equal(result.ExecutionId, task.ExecutionId));
+        Assert.True(File.Exists(Path.Combine(root, "events.jsonl")));
+    }
+
+    [Fact]
+    public async Task UiStateCoalescesHighFrequencyEvents()
+    {
+        await using var hub = new RuntimeEventHub();
+        var dispatcher = new CountingDispatcher();
+        var snapshots = 0;
+        await using var aggregator = new RuntimeUiStateAggregator(hub, dispatcher, _ => Interlocked.Increment(ref snapshots));
+        await aggregator.StartAsync();
+
+        var execution = ExecutionId.New();
+        for (var i = 0; i < 250; i++)
+        {
+            await hub.PublishAsync(new TaskProgressEvent(
+                DateTimeOffset.UtcNow,
+                execution,
+                TaskId.New(),
+                CorrelationId.New(),
+                "test",
+                i / 250d,
+                null));
+        }
+
+        await Task.Delay(120);
+        Assert.True(dispatcher.PostCount < 250);
+        Assert.True(snapshots > 0);
+    }
+
+    [Fact]
+    public async Task UiStateProducesTypedBlocksAndAgentSnapshotsFromRuntimeEvents()
+    {
+        await using var hub = new RuntimeEventHub();
+        var dispatcher = new CountingDispatcher();
+        var snapshotReady = new TaskCompletionSource<UiGraphSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await using var aggregator = new RuntimeUiStateAggregator(hub, dispatcher, snapshot => snapshotReady.TrySetResult(snapshot));
+        await aggregator.StartAsync();
+
+        var execution = ExecutionId.New();
+        var task = TaskId.New();
+        var correlation = CorrelationId.New();
+        await hub.PublishAsync(new ExecutionStartedEvent(DateTimeOffset.UtcNow, execution, correlation, "test", 1));
+        await hub.PublishAsync(new TaskCreatedEvent(DateTimeOffset.UtcNow, execution, task, correlation, "Scout", "Search", ExecutorKind.Tool, WorkPriority.Interactive, []));
+        await hub.PublishAsync(new TaskStartedEvent(DateTimeOffset.UtcNow, execution, task, correlation, "Scout", ExecutorKind.Tool, 1));
+        await hub.PublishAsync(new TaskProgressEvent(DateTimeOffset.UtcNow, execution, task, correlation, "Scout", 0.5, "searching"));
+        await hub.PublishAsync(new TaskCompletedEvent(DateTimeOffset.UtcNow, execution, task, correlation, "Scout", ResultId.New(), [EvidenceId.New()], new TaskTiming(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(4), TimeSpan.FromMilliseconds(5)), "found"));
+
+        var latest = await snapshotReady.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Single(latest.Tasks);
+        Assert.Equal(WorkState.Succeeded, latest.Tasks[0].State);
+        Assert.Single(latest.Agents);
+        Assert.Contains(latest.Blocks, block => block.Kind == ActivityBlockKind.Result);
+        Assert.Single(latest.Tasks[0].Evidence!);
+    }
+
+    [Fact]
+    public async Task ChatRendersTheCompletedModelResponseInsteadOfLeavingAPlaceholder()
+    {
+        var chat = new ChatViewModel(new MockModelProvider(TimeSpan.Zero), new CountingDispatcher());
+        chat.Input = "Explain the scheduler briefly.";
+
+        await chat.SendAsync();
+
+        var assistant = Assert.Single(chat.Messages, static message => message.IsAssistant);
+        Assert.False(assistant.IsStreaming);
+        Assert.False(assistant.IsError);
+        Assert.Contains("Deterministic synthesis", assistant.Text, StringComparison.Ordinal);
+        Assert.Equal("READY · RESPONSE COMPLETE", chat.Status);
+
+        await chat.DisposeAsync();
+    }
+
+    [Fact]
+    public void CommandSearchRanksTitleMatches()
+    {
+        var registry = new CommandRegistry();
+        registry.Register(new CommandDescriptor("mission.run", "Run mission", "Submit intent", "Mission", "Ctrl+Enter", _ => ValueTask.CompletedTask));
+        registry.Register(new CommandDescriptor("panel.terminal", "Open terminal", "Open a process surface", "Workspace", "Ctrl+`", _ => ValueTask.CompletedTask));
+
+        var result = registry.Search("terminal");
+
+        Assert.Single(result);
+        Assert.Equal("panel.terminal", result[0].Id);
+    }
+
+    [Fact]
+    public async Task EventHubSequencesEventsAndLedgerReadsHistory()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "abraxius-ledger-tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(root, "events.jsonl");
+        await using var ledger = new Abraxius.Ledger.BufferedEventLedger(path, capacity: 8, batchSize: 4);
+        ledger.Start();
+        await ledger.AppendAsync(new RuntimeWarningEvent(DateTimeOffset.UtcNow, ExecutionId.New(), null, CorrelationId.New(), "test", "warning"));
+        await ledger.AppendAsync(new RuntimeWarningEvent(DateTimeOffset.UtcNow, ExecutionId.New(), null, CorrelationId.New(), "test", "warning-2"));
+        await ledger.FlushAsync();
+
+        var entries = new List<Abraxius.Ledger.LedgerEntry>();
+        await foreach (var entry in ledger.ReadAsync())
+        {
+            entries.Add(entry);
+        }
+
+        Assert.Equal(2, entries.Count);
+        Assert.All(entries, entry => Assert.Equal(RuntimeEventKind.RuntimeWarning, entry.Kind));
+    }
+
+    private sealed class CountingDispatcher : IUiDispatcher
+    {
+        public int PostCount;
+        public void Post(Action action)
+        {
+            Interlocked.Increment(ref PostCount);
+            action();
+        }
+    }
+}

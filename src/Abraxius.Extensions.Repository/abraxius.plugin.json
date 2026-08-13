@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "org.abraxius.repository-intelligence",
+  "version": "1.0.0",
+  "name": "Repository Intelligence",
+  "description": "First-party proof extension for structured repository recognition, inspection, UI, Artifact metadata, and evaluation.",
+  "publisher": "Abraxius",
+  "requires": {
+    "abraxiusVersionRange": ">=1.0.0 <2.0.0",
+    "pluginApi": { "major": 1, "minor": 0 },
+    "platforms": [ "Windows", "Linux", "macOS" ],
+    "architectures": [ "x64", "arm64" ]
+  },
+  "entrypoints": [
+    { "tier": "ManagedOutOfProcess", "path": "lib/net10.0/Abraxius.Extensions.Repository.dll", "type": "Abraxius.Extensions.Repository.RepositoryIntelligencePlugin" }
+  ],
+  "permissions": [
+    { "id": "project.read", "risk": "ReadOnly", "reason": "Inspect project metadata explicitly supplied through the broker.", "resourceScopes": [ "project://active" ], "required": true },
+    { "id": "ui.navigation", "risk": "UserInterface", "reason": "Render the repository inspector using Abraxius-owned declarative controls.", "resourceScopes": [ "capability://ui/repository" ], "required": true },
+    { "id": "artifact.preview", "risk": "ReadOnly", "reason": "Describe repository-report Artifact metadata.", "resourceScopes": [ "artifact://repository-report" ], "required": false }
+  ],
+  "contributions": [
+    { "id": "repo.inspect", "kind": "CapabilityProvider", "displayName": "Inspect repository metadata", "version": "1", "requiredPermissions": [ "project.read" ] },
+    { "id": "repo.open", "kind": "Command", "displayName": "Open Repository Intelligence", "version": "1", "requiredPermissions": [ "ui.navigation" ] },
+    { "id": "repo.page", "kind": "InspectorPanel", "displayName": "Repository Intelligence", "version": "1", "requiredPermissions": [ "ui.navigation" ] },
+    { "id": "repo.report", "kind": "ArtifactKind", "displayName": "Repository report", "version": "1", "requiredPermissions": [ "artifact.preview" ] },
+    { "id": "repo.recognizer", "kind": "ProjectRecognizer", "displayName": "Repository recognizer", "version": "1", "requiredPermissions": [ "project.read" ] },
+    { "id": "repo.eval", "kind": "EvalSuite", "displayName": "Repository extension contract eval", "version": "1", "requiredPermissions": [] }
+  ],
+  "activationMode": "Project",
+  "minimumSandboxLevel": "ProcessIsolation",
+  "dependencies": [],
+  "license": "MIT"
+}

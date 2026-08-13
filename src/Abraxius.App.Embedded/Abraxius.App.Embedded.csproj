@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Abraxius.App.Embedded</RootNamespace>
+    <AssemblyName>Abraxius.Embedded</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.App/Abraxius.App.csproj" />
+    <ProjectReference Include="../Abraxius.Platform/Abraxius.Platform.csproj" />
+  </ItemGroup>
+</Project>

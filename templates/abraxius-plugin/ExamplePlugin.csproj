@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AbraxiusPluginId>com.example.plugin</AbraxiusPluginId>
+    <AbraxiusPluginVersion>1.0.0</AbraxiusPluginVersion>
+    <AbraxiusPluginManifest>abraxius.plugin.json</AbraxiusPluginManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Abraxius.Plugin.Sdk" Version="1.0.0" PrivateAssets="all" />
+    <PackageReference Include="Abraxius.Plugin.Managed.Abstractions" Version="1.0.0" />
+  </ItemGroup>
+</Project>

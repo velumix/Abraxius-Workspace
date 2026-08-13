@@ -1,0 +1,774 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Abraxius.App"
+             xmlns:controls="using:Abraxius.App"
+             x:Class="Abraxius.App.MainView"
+             x:Name="Root"
+             x:DataType="vm:MainViewModel"
+             SizeChanged="OnSizeChanged"
+             KeyDown="OnRootKeyDown">
+  <Panel Background="{StaticResource BackgroundBrush}">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" ColumnDefinitions="52,*,320" RowSpacing="1" ColumnSpacing="1">
+      <Border Grid.Row="0" Grid.ColumnSpan="3" Classes="topbar">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="14">
+          <TextBlock Text="◈ ABRAXIUS" Classes="brand" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+            <TextBlock Text="{Binding ProjectText}" Classes="context-text" />
+            <TextBlock Text="{Binding MissionText}" Classes="context-text" />
+          </StackPanel>
+          <TextBlock Grid.Column="2" Text="● LATTICE" Classes="system-status" />
+          <TextBlock Grid.Column="3" Text="{Binding IntelligenceText}" Classes="system-status" />
+          <TextBlock Grid.Column="4" Text="{Binding CpuText}" Classes="system-status" />
+          <TextBlock Grid.Column="5" Text="{Binding VoiceStatus}" Classes="system-status" />
+          <TextBlock Grid.Column="6" Text="{Binding UpdateStatusText}" Classes="system-status" />
+          <TextBlock Grid.Column="7" Text="{Binding Status}" Classes="status" />
+        </Grid>
+      </Border>
+
+      <Border Grid.Row="1" Grid.Column="0" Classes="rail">
+        <StackPanel Spacing="6">
+          <Button Classes="rail-button active" Command="{Binding SelectMissionCommand}" ToolTip.Tip="Mission">
+            <TextBlock Text="◉" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectChatCommand}" ToolTip.Tip="Chat">
+            <TextBlock Text="◌" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectAgentsCommand}" ToolTip.Tip="Agents">
+            <TextBlock Text="◫" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectTerminalCommand}" ToolTip.Tip="Terminal">
+            <TextBlock Text="⌘" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectDiagnosticsCommand}" ToolTip.Tip="Diagnostics">
+            <TextBlock Text="◇" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectMemoryCommand}" ToolTip.Tip="Memory">
+            <TextBlock Text="◌" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectSkillsCommand}" ToolTip.Tip="Skills">
+            <TextBlock Text="⚒" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectProgressionCommand}" ToolTip.Tip="Progression">
+            <TextBlock Text="◈" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectArtifactsCommand}" ToolTip.Tip="Artifacts &amp; Review">
+            <TextBlock Text="▱" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectEvaluationCommand}" ToolTip.Tip="Evaluation Lab">
+            <TextBlock Text="∿" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectFabricCommand}" ToolTip.Tip="Fabric">
+            <TextBlock Text="⌁" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectComputeCommand}" ToolTip.Tip="Compute">
+            <TextBlock Text="▦" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectExtensionsCommand}" ToolTip.Tip="Extensions">
+            <TextBlock Text="⊞" />
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectNeedsYouCommand}" ToolTip.Tip="Needs You">
+            <Grid><TextBlock Text="!" /><Border Background="#C98A58" CornerRadius="8" MinWidth="16" Height="16" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12,-8,-8,0" IsVisible="{Binding HasNeedsYou}"><TextBlock Text="{Binding NeedsYouCount}" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border></Grid>
+          </Button>
+          <Button Classes="rail-button" Command="{Binding SelectSecurityCommand}" ToolTip.Tip="Security"><TextBlock Text="◇" /></Button>
+          <Button Classes="rail-button" Command="{Binding SelectDebriefCommand}" ToolTip.Tip="Debrief">
+            <TextBlock Text="◍" />
+          </Button>
+          <Border Height="1" Background="{StaticResource LineBrush}" Margin="8,6" />
+          <Button Classes="rail-button quiet" Command="{Binding OpenCommandPaletteCommand}" ToolTip.Tip="Commands (Ctrl/Cmd+K)">
+            <TextBlock Text="⌕" />
+          </Button>
+          <Button Classes="rail-button quiet" Command="{Binding SelectSettingsCommand}" ToolTip.Tip="Background &amp; Notifications"><TextBlock Text="⚙" /></Button>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Classes="workspace">
+        <Border.ContextMenu>
+          <ContextMenu DataContext="{Binding #Root.DataContext}">
+            <MenuItem Header="Show graph" Command="{Binding SelectGraphCommand}" />
+            <MenuItem Header="Show execution lanes" Command="{Binding SelectLanesCommand}" />
+            <MenuItem Header="Toggle inspector" Command="{Binding ToggleInspectorCommand}" />
+            <MenuItem Header="Toggle activity deck" Command="{Binding ToggleActivityCommand}" />
+            <MenuItem Header="Open commands" Command="{Binding OpenCommandPaletteCommand}" />
+          </ContextMenu>
+        </Border.ContextMenu>
+        <Panel>
+        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsMissionVisible}">
+          <Grid Grid.Column="0" RowDefinitions="Auto,*">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto" Margin="0,0,0,12">
+              <StackPanel Orientation="Vertical" Spacing="2">
+                <TextBlock Text="MISSION" Classes="section-label" />
+                <TextBlock Text="{Binding AttentionText}" Classes="mission-title" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
+                <Button Content="GRAPH" Classes="view-button" Command="{Binding SelectGraphCommand}" />
+                <Button Content="LANES" Classes="view-button" Command="{Binding SelectLanesCommand}" />
+                <Button Content="AGENTS" Classes="view-button" Command="{Binding SelectAgentGridCommand}" />
+                <Button Content="ACTIVITY" Classes="view-button" Command="{Binding SelectActivityCommand}" />
+              </StackPanel>
+              <Button Grid.Column="2" Content="INSPECT" Classes="quiet-button" Command="{Binding ToggleInspectorCommand}" Margin="12,0,0,0" />
+              <Button Grid.Column="3" Content="ACTIVITY" Classes="quiet-button" Command="{Binding ToggleActivityCommand}" Margin="4,0,0,0" />
+              <Button Grid.Column="4" Content="PERF" Classes="quiet-button" Command="{Binding TogglePerformanceCommand}" Margin="4,0,0,0" />
+              <TextBlock Grid.Column="5" Text="{Binding QueueText}" Classes="context-text" VerticalAlignment="Center" Margin="12,0,0,0" />
+            </Grid>
+
+            <Panel Grid.Row="1">
+              <controls:ExecutionGraphView Snapshot="{Binding Graph}"
+                                            SelectedTaskId="{Binding SelectedTaskId}"
+                                            ReducedMotion="{Binding ReducedMotion}"
+                                            IsVisible="{Binding IsGraphView}"
+                                            TaskSelected="OnTaskSelected" />
+              <controls:ExecutionLanesView Snapshot="{Binding Graph}"
+                                             SelectedTaskId="{Binding SelectedTaskId}"
+                                             IsVisible="{Binding IsLanesView}"
+                                             TaskSelected="OnTaskSelected" />
+              <ListBox ItemsSource="{Binding SpecialistCards}" IsVisible="{Binding IsAgentsView}" Classes="agent-grid">
+                <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:UiSpecialistCard">
+                    <Border Classes="agent-item">
+                      <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="7">
+                        <TextBlock Text="{Binding Name}" Classes="agent-name" />
+                        <TextBlock Grid.Column="1" Text="{Binding State}" Classes="state-text" />
+                        <TextBlock Grid.Row="1" Text="{Binding Role}" Classes="muted" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ActiveAssignments, StringFormat='ACTIVE {0}'}" Classes="muted" />
+                        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Detail}" Classes="agent-detail" TextTrimming="CharacterEllipsis" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <ListBox ItemsSource="{Binding ActivityBlocks}" IsVisible="{Binding IsActivityView}" Classes="activity-stream">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ActivityBlock">
+                    <Border Classes="activity-row">
+                      <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10">
+                        <TextBlock Text="{Binding Glyph}" Classes="activity-glyph" />
+                        <TextBlock Grid.Column="1" Text="{Binding TimeText}" Classes="event-time" />
+                        <StackPanel Grid.Column="2" Spacing="2">
+                          <TextBlock Text="{Binding Title}" Classes="activity-title" />
+                          <TextBlock Text="{Binding Detail}" Classes="activity-detail" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="3" Text="{Binding Status}" Classes="state-text" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </Panel>
+          </Grid>
+
+          <Border Grid.Column="1" Classes="inspector" IsVisible="{Binding IsInspectorVisible}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+              <StackPanel Spacing="12">
+                <TextBlock Text="INSPECTOR" Classes="section-label" />
+                <TextBlock Text="{Binding SelectedTask.Label, FallbackValue=Select a task}" Classes="inspector-title" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SelectedTask.State, StringFormat='STATE   {0}', FallbackValue='STATE   WAITING'}" Classes="inspector-row" />
+                <TextBlock Text="{Binding SelectedTask.Executor, StringFormat='EXECUTOR {0}', FallbackValue='EXECUTOR --'}" Classes="inspector-row" />
+                <TextBlock Text="{Binding SelectedTask.TaskId, StringFormat='TASK {0}', FallbackValue='TASK --'}" Classes="inspector-row" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SelectedTask.Timing.TotalLatency, StringFormat='TOTAL   {0}', FallbackValue='TOTAL   --'}" Classes="inspector-row" />
+                <TextBlock Text="{Binding SelectedTask.Timing.QueueLatency, StringFormat='QUEUE   {0}', FallbackValue='QUEUE   --'}" Classes="inspector-row" />
+                <TextBlock Text="{Binding SelectedTask.Timing.ExecutionLatency, StringFormat='RUN     {0}', FallbackValue='RUN     --'}" Classes="inspector-row" />
+                <Border Classes="inspector-rule" />
+                <TextBlock Text="DEPENDENCIES" Classes="section-label" />
+                <ItemsControl ItemsSource="{Binding SelectedTask.Dependencies}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding}" Classes="inspector-row" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="EVIDENCE" Classes="section-label" />
+                <ItemsControl ItemsSource="{Binding SelectedTask.Evidence}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding}" Classes="evidence-row" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Border Classes="inspector-rule" />
+                <TextBlock Text="INTELLIGENCE ROUTE" Classes="section-label" />
+                <TextBlock Text="{Binding IntelligenceRouteText}" Classes="inspector-row" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding IntelligenceReasonText}" Classes="muted" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SelectedTask.Error, FallbackValue=No errors}" Classes="error-text" TextWrapping="Wrap" />
+                <Button Content="OPEN EVIDENCE" Classes="quiet-button" Command="{Binding OpenEvidenceCommand}" />
+              </StackPanel>
+            </ScrollViewer>
+          </Border>
+        </Grid>
+        <Border Classes="workspace chat-workspace" IsVisible="{Binding IsChatVisible}">
+          <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+              <StackPanel Spacing="2">
+                <TextBlock Text="CHAT ROOM" Classes="section-label" />
+                <TextBlock Text="Talk with Abraxius directly" Classes="mission-title" />
+                <TextBlock Text="Conversation is separate from mission execution. Use Run as mission when you want the scheduler to act." Classes="muted" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding Chat.JobStatus}" Classes="state-text" Margin="0,6,0,0" />
+                <TextBlock Text="{Binding Chat.JobDetail}" Classes="muted" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding Chat.JobExecution}" Classes="muted" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding Chat.Status}" Classes="state-text" VerticalAlignment="Center" />
+              <Button Grid.Column="2" Content="CLEAR" Classes="quiet-button" Command="{Binding Chat.ClearCommand}" />
+              <Button Grid.Column="3" Content="RUN AS MISSION" Classes="primary" Command="{Binding RunChatAsMissionCommand}" IsEnabled="{Binding Chat.CanSendToMission}" />
+            </Grid>
+            <ListBox Grid.Row="1" ItemsSource="{Binding Chat.Messages}" Classes="chat-list" ScrollViewer.VerticalScrollBarVisibility="Auto">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:UiChatMessage">
+                  <Panel Margin="0,0,0,10">
+                    <Border IsVisible="{Binding IsAssistant}" HorizontalAlignment="Left" Classes="chat-bubble assistant">
+                      <StackPanel Spacing="5">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                          <TextBlock Text="{Binding Speaker}" Classes="chat-speaker" />
+                          <TextBlock Grid.Column="1" Text="{Binding TimeText}" Classes="event-time" />
+                        </Grid>
+                        <TextBlock Text="{Binding Text}" Classes="chat-text" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding StateText}" Classes="chat-state" IsVisible="{Binding IsStreaming}" />
+                      </StackPanel>
+                    </Border>
+                    <Border IsVisible="{Binding IsUser}" HorizontalAlignment="Right" Classes="chat-bubble user">
+                      <StackPanel Spacing="5">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                          <TextBlock Text="{Binding Speaker}" Classes="chat-speaker" />
+                          <TextBlock Grid.Column="1" Text="{Binding TimeText}" Classes="event-time" />
+                        </Grid>
+                        <TextBlock Text="{Binding Text}" Classes="chat-text" TextWrapping="Wrap" />
+                      </StackPanel>
+                    </Border>
+                  </Panel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+              <TextBox Text="{Binding Chat.Input, Mode=TwoWay}" Classes="command-input" AcceptsReturn="True" MinHeight="54" MaxHeight="140" TextWrapping="Wrap" PlaceholderText="Message Abraxius…" KeyDown="OnChatKeyDown" />
+              <Button Grid.Column="1" Content="SEND  ↵" Classes="primary" Command="{Binding Chat.SendCommand}" />
+              <Button Grid.Column="2" Content="RUN JOB" Classes="primary" Command="{Binding RunChatAsMissionCommand}" IsEnabled="{Binding Chat.CanSendToMission}" />
+              <Button Grid.Column="3" Content="CANCEL" Classes="quiet-button" Command="{Binding Chat.CancelCommand}" IsVisible="{Binding Chat.IsSending}" />
+            </Grid>
+          </Grid>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsDiagnosticsVisible}">
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                <StackPanel Spacing="2">
+                  <TextBlock Text="AXL INSPECTOR" Classes="section-label" />
+                  <TextBlock Text="Typed machine representation · parse / validate / compile boundary" Classes="muted" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding AxlStatusText}" Classes="state-text" VerticalAlignment="Center" />
+                <Button Grid.Column="2" Content="VALIDATE" Classes="primary" Command="{Binding ParseAxlCommand}" />
+              </Grid>
+              <TextBox Text="{Binding AxlInputText, Mode=TwoWay}" AcceptsReturn="True" MinHeight="100" Classes="command-input" PlaceholderText="Enter AXL; this surface never executes it." />
+              <Grid ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="18">
+                <TextBlock Text="{Binding AxlCommandCount, StringFormat='COMMANDS  {0}'}" Classes="diagnostic-text" />
+                <TextBlock Grid.Column="1" Text="{Binding AxlHash, StringFormat='HASH  {0}'}" Classes="diagnostic-text" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="2" Text="VERSION  axl/1" Classes="diagnostic-text" />
+              </Grid>
+              <Border Classes="inspector-rule" />
+              <TextBlock Text="CANONICAL / PRETTY" Classes="section-label" />
+              <TextBox Text="{Binding AxlFormattedText}" IsReadOnly="True" AcceptsReturn="True" MinHeight="110" Classes="terminal-line" />
+              <TextBlock Text="DIAGNOSTICS" Classes="section-label" />
+              <TextBlock Text="{Binding AxlDiagnosticsText}" Classes="diagnostic-text" TextWrapping="Wrap" />
+              <TextBlock Text="AXL parsing, validation, and compilation do not authorize or execute capabilities. Execution remains behind the existing policy and scheduler boundaries." Classes="muted" TextWrapping="Wrap" />
+            </StackPanel>
+          </ScrollViewer>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsComputeVisible}">
+          <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+              <StackPanel Spacing="2"><TextBlock Text="COMPUTE" Classes="section-label" /><TextBlock Text="Devices · model residency · bounded local inference" Classes="muted" /></StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding Compute.Status}" Classes="state-text" VerticalAlignment="Center" />
+              <Button Grid.Column="2" Content="REFRESH" Classes="quiet-button" Command="{Binding Compute.RefreshCommand}" />
+            </Grid>
+            <Border Grid.Row="1" Classes="activity-row"><TextBlock Text="{Binding Compute.Overview}" Classes="activity-detail" TextWrapping="Wrap" /></Border>
+            <TabControl Grid.Row="2">
+              <TabItem Header="DEVICES">
+                <ListBox ItemsSource="{Binding Compute.Devices}" Classes="activity-stream">
+                  <ListBox.ItemTemplate><DataTemplate x:DataType="vm:ComputeDeviceRow"><Border Classes="activity-row"><Grid ColumnDefinitions="*,Auto" ColumnSpacing="12"><StackPanel Spacing="3"><TextBlock Text="{Binding Name}" Classes="activity-title" /><TextBlock Text="{Binding Id}" Classes="muted" /><TextBlock Text="{Binding Memory}" Classes="activity-detail" /></StackPanel><StackPanel Grid.Column="1"><TextBlock Text="{Binding Kind}" Classes="state-text" /><TextBlock Text="{Binding Utilization}" Classes="activity-title" /><TextBlock Text="{Binding Temperature}" Classes="muted" /><TextBlock Text="{Binding Pressure}" Classes="state-text" /></StackPanel></Grid></Border></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+              </TabItem>
+              <TabItem Header="MODELS">
+                <Grid RowDefinitions="*,Auto" RowSpacing="8"><ListBox ItemsSource="{Binding Compute.Models}" SelectedItem="{Binding Compute.SelectedModel, Mode=TwoWay}" Classes="activity-stream"><ListBox.ItemTemplate><DataTemplate x:DataType="vm:ComputeModelRow"><Border Classes="activity-row"><Grid ColumnDefinitions="*,Auto"><StackPanel Spacing="3"><TextBlock Text="{Binding Name}" Classes="activity-title" /><TextBlock Text="{Binding Variant}" Classes="activity-detail" /><TextBlock Text="{Binding Revision}" Classes="muted" TextTrimming="CharacterEllipsis" /><TextBlock Text="{Binding Capabilities}" Classes="muted" /></StackPanel><StackPanel Grid.Column="1"><TextBlock Text="{Binding State}" Classes="state-text" /><TextBlock Text="{Binding Size}" Classes="activity-title" /><TextBlock Text="{Binding Backends}" Classes="muted" /></StackPanel></Grid></Border></DataTemplate></ListBox.ItemTemplate></ListBox><Button Grid.Row="1" Content="UNLOAD IDLE MODEL" Classes="quiet-button" HorizontalAlignment="Right" Command="{Binding Compute.UnloadCommand}" /></Grid>
+              </TabItem>
+              <TabItem Header="RESIDENCY / WORKLOADS"><ListBox ItemsSource="{Binding Compute.Workloads}" Classes="activity-stream"><ListBox.ItemTemplate><DataTemplate x:DataType="vm:ComputeWorkloadRow"><Border Classes="activity-row"><Grid ColumnDefinitions="*,Auto"><StackPanel><TextBlock Text="{Binding Purpose}" Classes="activity-title" /><TextBlock Text="{Binding Resources}" Classes="activity-detail" /></StackPanel><StackPanel Grid.Column="1"><TextBlock Text="{Binding Priority}" Classes="state-text" /><TextBlock Text="{Binding State}" Classes="muted" /></StackPanel></Grid></Border></DataTemplate></ListBox.ItemTemplate></ListBox></TabItem>
+              <TabItem Header="BACKENDS / SETTINGS"><ListBox ItemsSource="{Binding Compute.Backends}" Classes="activity-stream"><ListBox.ItemTemplate><DataTemplate x:DataType="vm:ComputeBackendRow"><Border Classes="activity-row"><Grid ColumnDefinitions="*,Auto"><StackPanel><TextBlock Text="{Binding Id}" Classes="activity-title" /><TextBlock Text="{Binding Devices}" Classes="activity-detail" /><TextBlock Text="{Binding Features}" Classes="muted" /></StackPanel><StackPanel Grid.Column="1"><TextBlock Text="{Binding Health}" Classes="state-text" /><TextBlock Text="{Binding Version}" Classes="muted" /></StackPanel></Grid></Border></DataTemplate></ListBox.ItemTemplate></ListBox></TabItem>
+            </TabControl>
+          </Grid>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsExtensionsVisible}">
+          <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+              <StackPanel Spacing="2"><TextBlock Text="EXTENSIONS" Classes="section-label" /><TextBlock Text="Immutable packages · isolated hosts · reviewed authority" Classes="muted" /></StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding Extensions.Status}" Classes="state-text" VerticalAlignment="Center" />
+              <Button Grid.Column="2" Content="REFRESH" Classes="quiet-button" Command="{Binding Extensions.RefreshCommand}" />
+            </Grid>
+            <Border Grid.Row="1" Classes="activity-row"><TextBlock Text="{Binding Extensions.Summary}" Classes="activity-detail" /></Border>
+            <Grid Grid.Row="2" ColumnDefinitions="3*,2*" ColumnSpacing="12">
+              <ListBox ItemsSource="{Binding Extensions.Installed}" SelectedItem="{Binding Extensions.Selected, Mode=TwoWay}" Classes="activity-stream">
+                <ListBox.ItemTemplate><DataTemplate x:DataType="vm:ExtensionRow"><Border Classes="activity-row"><Grid ColumnDefinitions="*,Auto" ColumnSpacing="12"><StackPanel Spacing="3"><TextBlock Text="{Binding Name}" Classes="activity-title" /><TextBlock Text="{Binding Id}" Classes="muted" TextTrimming="CharacterEllipsis" /><TextBlock Text="{Binding Publisher}" Classes="activity-detail" /><TextBlock Text="{Binding Contributions}" Classes="muted" /></StackPanel><StackPanel Grid.Column="1"><TextBlock Text="{Binding State}" Classes="state-text" /><TextBlock Text="{Binding Version}" Classes="activity-title" /><TextBlock Text="{Binding Health}" Classes="muted" /><TextBlock Text="{Binding Trust}" Classes="muted" /></StackPanel></Grid></Border></DataTemplate></ListBox.ItemTemplate>
+              </ListBox>
+              <Border Grid.Column="1" Classes="inspector-card"><Grid RowDefinitions="Auto,*,Auto" RowSpacing="10"><TextBlock Text="EXTENSION INSPECTOR" Classes="section-label" /><ScrollViewer Grid.Row="1"><TextBlock Text="{Binding Extensions.SelectedDetails}" Classes="activity-detail" TextWrapping="Wrap" /></ScrollViewer><StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8"><Button Content="ENABLE" Classes="primary" Command="{Binding Extensions.EnableCommand}" /><Button Content="DISABLE" Classes="quiet-button" Command="{Binding Extensions.DisableCommand}" /><Button Content="RESTART" Classes="quiet-button" Command="{Binding Extensions.RestartCommand}" /></StackPanel></Grid></Border>
+            </Grid>
+          </Grid>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsMemoryVisible}">
+          <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <StackPanel Spacing="2">
+                <TextBlock Text="MEMORY" Classes="section-label" />
+                <TextBlock Text="Persistent project knowledge · lexical / semantic / structural retrieval" Classes="muted" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding Memory.Status}" Classes="state-text" VerticalAlignment="Center" />
+            </Grid>
+            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBox Text="{Binding Memory.Query, Mode=TwoWay}" Classes="command-input" PlaceholderText="Search project knowledge" KeyDown="OnMemorySearchKeyDown" />
+              <Button Grid.Column="1" Content="SEARCH" Classes="primary" Command="{Binding Memory.SearchCommand}" />
+            </Grid>
+            <ListBox Grid.Row="2" ItemsSource="{Binding Memory.Results}" SelectedItem="{Binding Memory.Selected, Mode=TwoWay}" Classes="activity-stream">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:MemoryResultItemViewModel">
+                  <Border Classes="activity-row">
+                    <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="3">
+                      <TextBlock Text="{Binding Kind}" Classes="activity-glyph" />
+                      <StackPanel Grid.Column="1" Spacing="2">
+                        <TextBlock Text="{Binding Title}" Classes="activity-title" />
+                        <TextBlock Text="{Binding Preview}" Classes="activity-detail" TextWrapping="Wrap" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="2" Text="{Binding ScoreText}" Classes="state-text" />
+                      <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Scope}" Classes="muted" />
+                      <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Id}" Classes="muted" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <Border Grid.Row="3" Classes="inspector-rule" />
+            <TextBlock Grid.Row="3" Text="{Binding Memory.Details}" Classes="muted" TextWrapping="Wrap" />
+          </Grid>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsDebriefVisible}">
+          <Grid RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="220,*" RowSpacing="12" ColumnSpacing="14">
+            <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+              <StackPanel Spacing="2">
+                <TextBlock Text="DEBRIEF" Classes="section-label" />
+                <TextBlock Text="{Binding DebriefTitle}" Classes="mission-title" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding DebriefSourceText}" Classes="muted" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding DebriefCurrentSpeaker}" Classes="state-text" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="2" Text="{Binding DebriefStatus}" Classes="state-text" VerticalAlignment="Center" />
+              <Button Grid.Column="3" Content="CREATE" Classes="primary" Command="{Binding CreateDebriefCommand}" />
+            </Grid>
+            <ListBox Grid.Row="1" ItemsSource="{Binding DebriefChapters}" Classes="activity-stream">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:UiDebriefChapter">
+                  <Button Classes="chapter-button" Command="{Binding #Root.DataContext.SkipDebriefChapterCommand}" CommandParameter="{Binding}">
+                    <Border Classes="activity-row">
+                      <StackPanel Spacing="3">
+                        <TextBlock Text="{Binding Ordinal, StringFormat='{}{0:00}'}" Classes="activity-title" />
+                        <TextBlock Text="{Binding Title}" Classes="activity-title" />
+                        <TextBlock Text="{Binding Objective}" Classes="activity-detail" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Ready, StringFormat='READY  {0}'}" Classes="muted" />
+                      </StackPanel>
+                    </Border>
+                  </Button>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <ListBox Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" ItemsSource="{Binding DebriefTurns}" Classes="activity-stream">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:UiDebriefTurn">
+                  <Border Classes="activity-row">
+                    <StackPanel Spacing="4">
+                      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <TextBlock Text="{Binding Speaker}" Classes="agent-name" />
+                        <TextBlock Grid.Column="1" Text="{Binding IsCurrent, StringFormat='{}{0:NOW}'}" Classes="state-text" />
+                      </Grid>
+                      <TextBlock Text="{Binding Text}" Classes="activity-detail" TextWrapping="Wrap" />
+                      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <TextBlock Text="{Binding Sources, StringFormat='SOURCES  {0}'}" Classes="muted" TextWrapping="Wrap" />
+                        <Button Grid.Column="1" Content="OPEN" Classes="quiet-button" Command="{Binding #Root.DataContext.OpenDebriefSourcesCommand}" CommandParameter="{Binding Sources}" />
+                      </Grid>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBox Text="{Binding DebriefQuestion, Mode=TwoWay}" Classes="command-input" PlaceholderText="Ask Athena, Orion, Daedalus, or Argus…" />
+              <Button Grid.Column="1" Content="ASK" Classes="primary" Command="{Binding AskDebriefCommand}" />
+            </Grid>
+            <Grid Grid.Row="3" Grid.ColumnSpan="2" ColumnDefinitions="Auto,Auto,Auto,Auto,*" ColumnSpacing="8">
+              <Button Content="PAUSE" Classes="quiet-button" Command="{Binding PauseDebriefCommand}" />
+              <Button Grid.Column="1" Content="RESUME" Classes="quiet-button" Command="{Binding ResumeDebriefCommand}" />
+              <Button Grid.Column="2" Content="TO MISSION" Classes="quiet-button" Command="{Binding TurnDebriefIntoMissionCommand}" />
+              <TextBlock Grid.Column="4" Text="Claims are checked against the source snapshot before speech." Classes="muted" VerticalAlignment="Center" TextWrapping="Wrap" />
+            </Grid>
+          </Grid>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsSkillsVisible}">
+          <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <StackPanel Spacing="2">
+                <TextBlock Text="SKILLS" Classes="section-label" />
+                <TextBlock Text="Validated procedures · bounded, versioned, policy-governed" Classes="muted" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding SkillStatus}" Classes="state-text" VerticalAlignment="Center" TextWrapping="Wrap" />
+            </Grid>
+            <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+              <TextBox Text="{Binding SkillQuery, Mode=TwoWay}" Classes="command-input" PlaceholderText="Match a procedure to an objective" />
+              <Button Grid.Column="1" Content="MATCH" Classes="primary" Command="{Binding MatchSkillsCommand}" />
+              <Button Grid.Column="2" Content="REFRESH" Classes="quiet-button" Command="{Binding RefreshSkillsCommand}" />
+            </Grid>
+            <ListBox Grid.Row="2" ItemsSource="{Binding Skills}" Classes="activity-stream">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:UiSkillRow">
+                  <Border Classes="activity-row">
+                    <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="3">
+                      <TextBlock Text="⚒" Classes="activity-glyph" />
+                      <StackPanel Grid.Column="1" Spacing="2">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                          <TextBlock Text="{Binding Id}" Classes="activity-title" />
+                          <TextBlock Grid.Column="1" Text="{Binding State}" Classes="state-text" />
+                        </Grid>
+                        <TextBlock Text="{Binding Description}" Classes="activity-detail" TextWrapping="Wrap" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="2" Spacing="2" HorizontalAlignment="Right">
+                        <TextBlock Text="{Binding Version}" Classes="state-text" />
+                        <TextBlock Text="{Binding Reliability}" Classes="muted" />
+                        <TextBlock Text="{Binding Usage}" Classes="muted" />
+                      </StackPanel>
+                      <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Scope}" Classes="muted" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsArtifactsVisible}">
+          <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+              <StackPanel Spacing="2"><TextBlock Text="ARTIFACTS" Classes="section-label" /><TextBlock Text="Immutable outputs · exact revision review · provenance" Classes="muted" /></StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding Artifacts.Status}" Classes="state-text" VerticalAlignment="Center" />
+              <Button Grid.Column="2" Content="REFRESH" Classes="quiet-button" Command="{Binding Artifacts.RefreshCommand}" />
+            </Grid>
+            <WrapPanel Grid.Row="1"><Button Content="LIBRARY" Classes="view-button" Command="{Binding Artifacts.ShowLibraryCommand}" /><Button Content="REVIEW QUEUE" Classes="view-button" Command="{Binding Artifacts.ShowReviewQueueCommand}" /></WrapPanel>
+            <Grid Grid.Row="2" ColumnDefinitions="260,*,300" ColumnSpacing="12">
+              <ListBox ItemsSource="{Binding Artifacts.Items}" SelectedItem="{Binding Artifacts.Selected, Mode=TwoWay}" Classes="activity-stream">
+                <ListBox.ItemTemplate><DataTemplate x:DataType="vm:ArtifactRow"><Border Classes="activity-row"><StackPanel Spacing="3"><TextBlock Text="{Binding Title}" Classes="activity-title" TextTrimming="CharacterEllipsis" /><TextBlock Text="{Binding Kind}" Classes="state-text" /><TextBlock Text="{Binding Producer}" Classes="activity-detail" /><Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding Verification}" Classes="muted" /><TextBlock Grid.Column="1" Text="{Binding State}" Classes="muted" /></Grid><TextBlock Text="{Binding Updated}" Classes="event-time" /></StackPanel></Border></DataTemplate></ListBox.ItemTemplate>
+              </ListBox>
+              <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="8">
+                <Grid ColumnDefinitions="*,Auto"><StackPanel><TextBlock Text="CHANGE REVIEW" Classes="section-label" /><TextBlock Text="{Binding Artifacts.Selected.Title}" Classes="mission-title" TextTrimming="CharacterEllipsis" /></StackPanel><TextBlock Grid.Column="1" Text="{Binding Artifacts.Selected.RevisionId, StringFormat='REV {0}'}" Classes="state-text" /></Grid>
+                <ListBox Grid.Row="1" ItemsSource="{Binding Artifacts.DiffLines}" Classes="activity-stream" FontFamily="monospace">
+                  <ListBox.ItemTemplate><DataTemplate x:DataType="vm:ArtifactDiffRow"><Grid ColumnDefinitions="24,46,46,*" ColumnSpacing="5"><TextBlock Text="{Binding Marker}" Classes="state-text" /><TextBlock Grid.Column="1" Text="{Binding OldLine}" Classes="event-time" /><TextBlock Grid.Column="2" Text="{Binding NewLine}" Classes="event-time" /><TextBlock Grid.Column="3" Text="{Binding Text}" Classes="activity-detail" TextWrapping="NoWrap" /></Grid></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+              </Grid>
+              <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="REVIEW" Classes="section-label" />
+                  <Border Classes="activity-row"><TextBlock Text="{Binding Artifacts.Inspector}" Classes="activity-detail" TextWrapping="Wrap" /></Border>
+                  <TextBlock Text="REVISION HISTORY" Classes="section-label" />
+                  <ListBox ItemsSource="{Binding Artifacts.Revisions}" MaxHeight="180" Classes="activity-stream"><ListBox.ItemTemplate><DataTemplate x:DataType="vm:ArtifactRevisionRow"><Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="7"><TextBlock Text="{Binding Label}" Classes="state-text" /><TextBlock Grid.Column="1" Text="{Binding State}" Classes="activity-detail" /><TextBlock Grid.Column="2" Text="{Binding Hash}" Classes="event-time" /></Grid></DataTemplate></ListBox.ItemTemplate></ListBox>
+                  <TextBox Text="{Binding Artifacts.ReviewReason, Mode=TwoWay}" PlaceholderText="Review note or requested change" AcceptsReturn="True" MinHeight="64" />
+                  <Button Content="REQUEST CHANGES" Classes="quiet-button" Command="{Binding Artifacts.RequestChangesCommand}" />
+                  <Button Content="REJECT REVISION" Classes="quiet-button" Command="{Binding Artifacts.RejectCommand}" />
+                  <Button Content="APPROVE EXACT REVISION" Classes="primary" Command="{Binding Artifacts.ApproveCommand}" />
+                  <TextBlock Text="Approval applies only to the displayed revision. Integration and publication remain separately authorized by the Security Kernel." Classes="muted" TextWrapping="Wrap" />
+                </StackPanel>
+              </ScrollViewer>
+            </Grid>
+          </Grid>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsEvaluationVisible}">
+          <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+              <StackPanel Spacing="2"><TextBlock Text="EVALUATION LAB" Classes="section-label" /><TextBlock Text="Measured outcomes · controlled baselines · explainable release gates" Classes="muted" /></StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding Evaluation.Status}" Classes="state-text" VerticalAlignment="Center" />
+              <Button Grid.Column="2" Content="RUN SMOKE" Classes="primary" Command="{Binding Evaluation.RunSmokeCommand}" />
+              <Button Grid.Column="3" Content="REFRESH" Classes="quiet-button" Command="{Binding Evaluation.RefreshCommand}" />
+            </Grid>
+            <WrapPanel Grid.Row="1" ItemHeight="32">
+              <Button Content="OVERVIEW" Classes="view-button" Command="{Binding Evaluation.ShowOverviewCommand}" /><Button Content="SUITES" Classes="view-button" Command="{Binding Evaluation.ShowSuitesCommand}" /><Button Content="RUNS" Classes="view-button" Command="{Binding Evaluation.ShowRunsCommand}" /><Button Content="MODELS" Classes="view-button" Command="{Binding Evaluation.ShowModelsCommand}" /><Button Content="SPECIALISTS" Classes="view-button" Command="{Binding Evaluation.ShowSpecialistsCommand}" /><Button Content="SKILLS" Classes="view-button" Command="{Binding Evaluation.ShowSkillsCommand}" /><Button Content="RETRIEVAL" Classes="view-button" Command="{Binding Evaluation.ShowRetrievalCommand}" /><Button Content="SECURITY" Classes="view-button" Command="{Binding Evaluation.ShowSecurityCommand}" /><Button Content="REGRESSIONS" Classes="view-button" Command="{Binding Evaluation.ShowRegressionsCommand}" />
+            </WrapPanel>
+            <Grid Grid.Row="2" ColumnDefinitions="260,*,320" ColumnSpacing="12">
+              <Grid RowDefinitions="Auto,*,Auto,*" RowSpacing="7">
+                <TextBlock Text="SUITES" Classes="section-label" />
+                <ListBox Grid.Row="1" ItemsSource="{Binding Evaluation.Suites}" SelectedItem="{Binding Evaluation.SelectedSuite, Mode=TwoWay}" Classes="activity-stream">
+                  <ListBox.ItemTemplate><DataTemplate x:DataType="vm:EvalSuiteRow"><Border Classes="activity-row"><StackPanel Spacing="3"><TextBlock Text="{Binding Name}" Classes="activity-title" TextTrimming="CharacterEllipsis" /><Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding Domain}" Classes="state-text" /><TextBlock Grid.Column="1" Text="{Binding Cases, StringFormat='{}{0} cases'}" Classes="muted" /></Grid><TextBlock Text="{Binding Version, StringFormat='v{0}'}" Classes="event-time" /></StackPanel></Border></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Grid.Row="2" Text="RECENT RUNS" Classes="section-label" Margin="0,8,0,0" />
+                <ListBox Grid.Row="3" ItemsSource="{Binding Evaluation.Runs}" SelectedItem="{Binding Evaluation.SelectedRun, Mode=TwoWay}" Classes="activity-stream">
+                  <ListBox.ItemTemplate><DataTemplate x:DataType="vm:EvalRunRow"><Border Classes="activity-row"><StackPanel Spacing="3"><TextBlock Text="{Binding Suite}" Classes="activity-title" /><Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding Status}" Classes="state-text" /><TextBlock Grid.Column="1" Text="{Binding Gate}" Classes="muted" /></Grid><TextBlock Text="{Binding Cases}" Classes="muted" /><TextBlock Text="{Binding Started}" Classes="event-time" /></StackPanel></Border></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+              </Grid>
+              <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*" RowSpacing="9">
+                <Grid ColumnDefinitions="*,Auto"><StackPanel><TextBlock Text="{Binding Evaluation.SectionTitle}" Classes="section-label" /><TextBlock Text="CANDIDATE EVIDENCE" Classes="mission-title" /></StackPanel><Button Grid.Column="1" Content="COMPARE RECENT" Classes="quiet-button" Command="{Binding Evaluation.CompareRecentCommand}" /></Grid>
+                <Border Grid.Row="1" Classes="activity-row"><TextBlock Text="{Binding Evaluation.Overview}" Classes="activity-detail" TextWrapping="Wrap" /></Border>
+                <ListBox Grid.Row="2" ItemsSource="{Binding Evaluation.Metrics}" Classes="activity-stream">
+                  <ListBox.ItemTemplate><DataTemplate x:DataType="vm:EvalMetricRow"><Border Classes="activity-row"><Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8"><TextBlock Text="{Binding Name}" Classes="activity-title" /><TextBlock Grid.Column="1" Text="{Binding Value}" Classes="state-text" /><TextBlock Grid.Column="2" Text="{Binding Unit}" Classes="muted" /></Grid></Border></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+              </Grid>
+              <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto" RowSpacing="8">
+                <TextBlock Text="REGRESSIONS" Classes="section-label" />
+                <ListBox Grid.Row="1" ItemsSource="{Binding Evaluation.Regressions}" SelectedItem="{Binding Evaluation.SelectedRegression, Mode=TwoWay}" Classes="activity-stream">
+                  <ListBox.ItemTemplate><DataTemplate x:DataType="vm:EvalRegressionRow"><Border Classes="activity-row"><StackPanel Spacing="3"><TextBlock Text="{Binding Metric}" Classes="activity-title" TextTrimming="CharacterEllipsis" /><Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding Severity}" Classes="state-text" /><TextBlock Grid.Column="1" Text="{Binding Delta}" Classes="state-text" /></Grid><TextBlock Text="{Binding Evidence}" Classes="muted" TextWrapping="Wrap" MaxLines="3" /></StackPanel></Border></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+                <Button Grid.Row="2" Content="CREATE MISSION FROM REGRESSION" Classes="primary" Command="{Binding Evaluation.CreateMissionCommand}" />
+              </Grid>
+            </Grid>
+          </Grid>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsFabricVisible}">
+          <Grid RowDefinitions="Auto,*" RowSpacing="12">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+              <StackPanel Spacing="2"><TextBlock Text="ABRAXIUS FABRIC" Classes="section-label" /><TextBlock Text="Authenticated nodes · real resources · explainable placement" Classes="muted" /></StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding Fabric.Status}" Classes="state-text" VerticalAlignment="Center" />
+              <Button Grid.Column="2" Content="REFRESH" Classes="quiet-button" Command="{Binding Fabric.RefreshCommand}" />
+            </Grid>
+            <Grid Grid.Row="1" ColumnDefinitions="*,320" ColumnSpacing="12">
+              <ListBox ItemsSource="{Binding Fabric.Nodes}" SelectedItem="{Binding Fabric.Selected, Mode=TwoWay}" Classes="activity-stream">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:FabricNodeRow">
+                    <Border Classes="activity-row">
+                      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel Spacing="4"><TextBlock Text="{Binding Name}" Classes="activity-title" /><TextBlock Text="{Binding Platform}" Classes="activity-detail" /><TextBlock Text="{Binding Resources}" Classes="muted" /><TextBlock Text="{Binding Capabilities}" Classes="muted" TextTrimming="CharacterEllipsis" /></StackPanel>
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Right"><TextBlock Text="{Binding Health}" Classes="state-text" /><TextBlock Text="{Binding Connectivity}" Classes="muted" /><TextBlock Text="{Binding Trust}" Classes="event-time" /></StackPanel>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <StackPanel Grid.Column="1" Spacing="9">
+                <TextBlock Text="NODE INSPECTOR" Classes="section-label" />
+                <Border Classes="activity-row"><TextBlock Text="{Binding Fabric.Inspector}" Classes="activity-detail" TextWrapping="Wrap" /></Border>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Content="DRAIN" Classes="quiet-button" Command="{Binding Fabric.DrainCommand}" /><Button Grid.Column="1" Content="RESUME" Classes="quiet-button" Command="{Binding Fabric.ResumeCommand}" /></Grid>
+                <TextBlock Text="Discovery never implies trust. Pairing, revocation, and remote mutations remain Phase 17-authorized." Classes="muted" TextWrapping="Wrap" />
+              </StackPanel>
+            </Grid>
+          </Grid>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsNeedsYouVisible}">
+          <Grid RowDefinitions="Auto,*" RowSpacing="12">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+              <StackPanel Spacing="2"><TextBlock Text="NEEDS YOU" Classes="section-label" /><TextBlock Text="Durable approvals and decisions · dismissing a notification never resolves these items" Classes="muted" /></StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding NeedsYouCount, StringFormat='{}{0} PENDING'}" Classes="state-text" VerticalAlignment="Center" />
+            </Grid>
+            <ListBox Grid.Row="1" ItemsSource="{Binding NeedsYouItems}" Classes="activity-stream">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:UiNeedsYouRow">
+                  <Border Classes="activity-row">
+                    <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+                      <TextBlock Text="!" Classes="activity-glyph" />
+                      <StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="{Binding Specialist}" Classes="activity-title" /><TextBlock Text="{Binding Reason}" Classes="state-text" /><TextBlock Text="{Binding Summary}" Classes="activity-detail" TextWrapping="Wrap" /><TextBlock Text="{Binding Created, StringFormat='Created {0}'}" Classes="muted" /></StackPanel>
+                      <StackPanel Grid.Column="2" Spacing="6" MinWidth="100"><Button Content="APPROVE" Classes="primary" Command="{Binding #Root.DataContext.ApproveNeedsYouCommand}" CommandParameter="{Binding}" /><Button Content="REJECT" Classes="quiet-button" Command="{Binding #Root.DataContext.RejectNeedsYouCommand}" CommandParameter="{Binding}" /><Button Content="SNOOZE 1H" Classes="quiet-button" Command="{Binding #Root.DataContext.SnoozeNeedsYouCommand}" CommandParameter="{Binding}" /></StackPanel>
+                      <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Deadline}" Classes="muted" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsSecurityVisible}">
+          <Grid RowDefinitions="Auto,Auto,*,*" RowSpacing="12">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+              <StackPanel Spacing="2"><TextBlock Text="SECURITY" Classes="section-label" /><TextBlock Text="Bounded authority · deterministic policy · brokered secrets" Classes="muted" /></StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding SecurityStatusText}" Classes="state-text" VerticalAlignment="Center" />
+              <WrapPanel Grid.Column="2"><Button Content="REFRESH" Classes="quiet-button" Command="{Binding RefreshSecurityCommand}" /><Button Content="LOCKDOWN" Classes="quiet-button" Command="{Binding ToggleLockdownCommand}" /></WrapPanel>
+            </Grid>
+            <Border Grid.Row="1" Classes="activity-row">
+              <StackPanel Spacing="5"><TextBlock Text="OVERVIEW" Classes="section-label" /><TextBlock Text="{Binding SecurityOverviewText}" Classes="mission-title" TextWrapping="Wrap" /><TextBlock Text="{Binding SecurityPolicyText}" Classes="activity-detail" TextWrapping="Wrap" /><TextBlock Text="Skill trust, specialist identity, model tier, achievements, and Prestige never contribute authority." Classes="muted" TextWrapping="Wrap" /></StackPanel>
+            </Border>
+            <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12">
+              <StackPanel Spacing="6"><TextBlock Text="ACTIVE GRANTS" Classes="section-label" /><ListBox ItemsSource="{Binding SecurityGrants}" Classes="activity-stream"><ListBox.ItemTemplate><DataTemplate x:DataType="vm:UiSecurityGrantRow"><Border Classes="activity-row"><Grid ColumnDefinitions="*,Auto" ColumnSpacing="10"><StackPanel><TextBlock Text="{Binding Capabilities}" Classes="activity-title" /><TextBlock Text="{Binding Subject}" Classes="activity-detail" /><TextBlock Text="{Binding Scope}" Classes="muted" /></StackPanel><StackPanel Grid.Column="1" HorizontalAlignment="Right"><TextBlock Text="{Binding Uses}" Classes="state-text" /><TextBlock Text="{Binding Expires}" Classes="muted" /></StackPanel></Grid></Border></DataTemplate></ListBox.ItemTemplate></ListBox></StackPanel>
+              <StackPanel Grid.Column="1" Spacing="6"><TextBlock Text="POLICY EXPLAINER" Classes="section-label" /><Border Classes="activity-row"><StackPanel Spacing="5"><TextBlock Text="DEFAULT DENY" Classes="activity-title" /><TextBlock Text="Reads within approved workspaces proceed without interruption. Workspace escapes, unknown capabilities, raw secret extraction, replayed side effects, and LocalOnly cloud egress are denied. External and destructive operations require bounded grants." Classes="activity-detail" TextWrapping="Wrap" /><TextBlock Text="Advanced decision traces are recorded in the audit ledger without model reasoning or secret values." Classes="muted" TextWrapping="Wrap" /></StackPanel></Border></StackPanel>
+            </Grid>
+            <StackPanel Grid.Row="3" Spacing="6"><TextBlock Text="SECURITY AUDIT" Classes="section-label" /><ListBox ItemsSource="{Binding SecurityAudit}" Classes="activity-stream" MaxHeight="280"><ListBox.ItemTemplate><DataTemplate x:DataType="vm:UiSecurityAuditRow"><Border Classes="activity-row"><Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10"><TextBlock Text="{Binding Time}" Classes="event-time" /><TextBlock Grid.Column="1" Text="{Binding Type}" Classes="state-text" /><StackPanel Grid.Column="2"><TextBlock Text="{Binding Action}" Classes="activity-title" /><TextBlock Text="{Binding Resource}" Classes="activity-detail" TextWrapping="Wrap" /><TextBlock Text="{Binding Principal}" Classes="muted" /></StackPanel><TextBlock Grid.Column="3" Text="{Binding Reason}" Classes="muted" /></Grid></Border></DataTemplate></ListBox.ItemTemplate></ListBox></StackPanel>
+          </Grid>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsProgressionVisible}">
+          <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+              <StackPanel Spacing="2">
+                <TextBlock Text="PROGRESSION" Classes="section-label" />
+                <TextBlock Text="Verified career · mastery · legacy" Classes="muted" />
+              </StackPanel>
+              <TextBlock Grid.Column="1" Text="{Binding Progression.Status}" Classes="state-text" VerticalAlignment="Center" />
+              <Button Grid.Column="2" Content="REFRESH" Classes="quiet-button" Command="{Binding Progression.RefreshCommand}" />
+            </Grid>
+            <WrapPanel Grid.Row="1" Orientation="Horizontal">
+              <Button Content="OVERVIEW" Classes="view-button" Command="{Binding Progression.SelectOverviewCommand}" />
+              <Button Content="SPECIALISTS" Classes="view-button" Command="{Binding Progression.SelectSpecialistsCommand}" />
+              <Button Content="SKILLS" Classes="view-button" Command="{Binding Progression.SelectSkillsCommand}" />
+              <Button Content="ACHIEVEMENTS" Classes="view-button" Command="{Binding Progression.SelectAchievementsCommand}" />
+              <Button Content="PRESTIGE" Classes="view-button" Command="{Binding Progression.SelectPrestigeCommand}" />
+              <Button Content="CAREER" Classes="view-button" Command="{Binding Progression.SelectCareerCommand}" />
+            </WrapPanel>
+            <Panel Grid.Row="2">
+              <ScrollViewer IsVisible="{Binding Progression.IsOverview}" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="16">
+                  <Border Classes="activity-row">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="14" RowSpacing="6">
+                      <StackPanel Spacing="3">
+                        <TextBlock Text="{Binding Progression.PrestigeText}" Classes="mission-title" />
+                        <TextBlock Text="{Binding Progression.LevelText}" Classes="activity-title" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="1" Text="{Binding Progression.ExperienceText}" Classes="state-text" VerticalAlignment="Center" />
+                      <ProgressBar Grid.Row="1" Grid.ColumnSpan="2" Minimum="0" Maximum="1" Value="{Binding Progression.LevelProgress}" Height="5" />
+                      <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Progression.CareerSummary}" Classes="activity-detail" />
+                    </Grid>
+                  </Border>
+                  <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <Border Classes="activity-row">
+                      <StackPanel Spacing="5"><TextBlock Text="INTELLIGENCE" Classes="section-label" /><TextBlock Text="{Binding Progression.IntelligenceSummary}" Classes="activity-detail" TextWrapping="Wrap" /></StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Classes="activity-row">
+                      <StackPanel Spacing="5"><TextBlock Text="PROCEDURAL MASTERY" Classes="section-label" /><TextBlock Text="{Binding Progression.SkillSummary}" Classes="activity-detail" TextWrapping="Wrap" /></StackPanel>
+                    </Border>
+                  </Grid>
+                  <TextBlock Text="SPECIALIST MASTERY" Classes="section-label" />
+                  <ListBox ItemsSource="{Binding Progression.Specialists}" Classes="agent-grid" MaxHeight="250">
+                    <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:SpecialistMasteryRow">
+                        <Border Classes="agent-card" MinWidth="190">
+                          <StackPanel Spacing="4"><TextBlock Text="{Binding Name}" Classes="agent-name" /><TextBlock Text="{Binding Role}" Classes="muted" /><TextBlock Text="{Binding Level, StringFormat='LEVEL {0}'}" Classes="state-text" /><TextBlock Text="{Binding Title}" Classes="activity-title" /><TextBlock Text="{Binding Categories}" Classes="activity-detail" TextWrapping="Wrap" /></StackPanel>
+                        </Border>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                  <TextBlock Text="RECENT MILESTONES" Classes="section-label" />
+                  <ListBox ItemsSource="{Binding Progression.Recent}" Classes="activity-stream" MaxHeight="280">
+                    <ListBox.ItemTemplate><DataTemplate x:DataType="vm:ProgressionFeedRow"><Border Classes="activity-row"><Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10"><TextBlock Text="{Binding Time}" Classes="event-time" /><TextBlock Grid.Column="1" Text="{Binding Kind}" Classes="state-text" /><TextBlock Grid.Column="2" Text="{Binding Summary}" Classes="activity-detail" /><TextBlock Grid.Column="3" Text="{Binding Amount}" Classes="activity-title" /></Grid></Border></DataTemplate></ListBox.ItemTemplate>
+                  </ListBox>
+                </StackPanel>
+              </ScrollViewer>
+              <ListBox IsVisible="{Binding Progression.IsSpecialists}" ItemsSource="{Binding Progression.Specialists}" Classes="activity-stream">
+                <ListBox.ItemTemplate><DataTemplate x:DataType="vm:SpecialistMasteryRow"><Border Classes="activity-row"><Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12"><TextBlock Text="◉" Classes="activity-glyph" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="{Binding Name}" Classes="mission-title" /><TextBlock Text="{Binding Role}" Classes="muted" /><TextBlock Text="{Binding Categories}" Classes="activity-detail" TextWrapping="Wrap" /></StackPanel><StackPanel Grid.Column="2" HorizontalAlignment="Right"><TextBlock Text="{Binding Level, StringFormat='LV {0}'}" Classes="state-text" /><TextBlock Text="{Binding Title}" Classes="activity-title" /><TextBlock Text="{Binding Experience, StringFormat='{}{0:N0} XP'}" Classes="muted" /></StackPanel></Grid></Border></DataTemplate></ListBox.ItemTemplate>
+              </ListBox>
+              <ListBox IsVisible="{Binding Progression.IsSkills}" ItemsSource="{Binding Progression.Skills}" Classes="activity-stream">
+                <ListBox.ItemTemplate><DataTemplate x:DataType="vm:SkillMasteryRow"><Border Classes="activity-row"><Grid ColumnDefinitions="*,Auto" ColumnSpacing="10"><StackPanel><TextBlock Text="{Binding Skill}" Classes="activity-title" /><TextBlock Text="{Binding VerifiedUses, StringFormat='{}{0} verified uses'}" Classes="muted" /></StackPanel><StackPanel Grid.Column="1" HorizontalAlignment="Right"><TextBlock Text="{Binding Status}" Classes="state-text" /><TextBlock Text="{Binding Experience, StringFormat='{}{0:N0} mastery XP'}" Classes="muted" /></StackPanel></Grid></Border></DataTemplate></ListBox.ItemTemplate>
+              </ListBox>
+              <ListBox IsVisible="{Binding Progression.IsAchievements}" ItemsSource="{Binding Progression.Achievements}" Classes="activity-stream">
+                <ListBox.ItemTemplate><DataTemplate x:DataType="vm:AchievementRow"><Border Classes="activity-row"><Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10"><TextBlock Text="◈" Classes="activity-glyph" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="{Binding Name}" Classes="activity-title" /><TextBlock Text="{Binding Description}" Classes="activity-detail" TextWrapping="Wrap" /><TextBlock Text="{Binding Reward}" Classes="muted" /></StackPanel><StackPanel Grid.Column="2" HorizontalAlignment="Right"><TextBlock Text="{Binding Rarity}" Classes="state-text" /><TextBlock Text="{Binding Progress}" Classes="muted" /><TextBlock Text="{Binding Unlocked, StringFormat='UNLOCKED {0}'}" Classes="muted" /></StackPanel></Grid></Border></DataTemplate></ListBox.ItemTemplate>
+              </ListBox>
+              <ScrollViewer IsVisible="{Binding Progression.IsPrestige}" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="16" HorizontalAlignment="Center" MaxWidth="680"><TextBlock Text="{Binding Progression.PrestigeText}" Classes="mission-title" HorizontalAlignment="Center" /><TextBlock Text="◈" FontSize="64" HorizontalAlignment="Center" /><TextBlock Text="LEGACY" Classes="section-label" /><TextBlock Text="{Binding Progression.CareerSummary}" Classes="activity-detail" TextWrapping="Wrap" /><TextBlock Text="NEXT PRESTIGE" Classes="section-label" /><TextBlock Text="{Binding Progression.PrestigeRequirements}" Classes="activity-detail" TextWrapping="Wrap" /><TextBlock Text="Activation resets only the displayed Operator cycle. Lifetime XP, specialists, Skills, memory, projects, achievements, and career history remain intact. No authority is unlocked." Classes="muted" TextWrapping="Wrap" /><Button Content="ACTIVATE PRESTIGE" Classes="primary" Command="{Binding Progression.ActivatePrestigeCommand}" IsEnabled="{Binding Progression.PrestigeAvailable}" HorizontalAlignment="Left" /></StackPanel>
+              </ScrollViewer>
+              <ScrollViewer IsVisible="{Binding Progression.IsCareer}" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="14"><TextBlock Text="CAREER" Classes="section-label" /><TextBlock Text="{Binding Progression.CareerSummary}" Classes="mission-title" TextWrapping="Wrap" /><TextBlock Text="{Binding Progression.IntelligenceSummary}" Classes="activity-detail" TextWrapping="Wrap" /><TextBlock Text="{Binding Progression.SkillSummary}" Classes="activity-detail" TextWrapping="Wrap" /><TextBlock Text="{Binding Progression.AchievementSummary}" Classes="activity-detail" TextWrapping="Wrap" /><Border Classes="inspector-rule" /><TextBlock Text="Career analytics are local, deterministic, private by default, and rebuildable from canonical records. Replay, benchmarks, tests, token volume, messages, and tool-call volume do not earn progression." Classes="muted" TextWrapping="Wrap" /></StackPanel>
+              </ScrollViewer>
+            </Panel>
+          </Grid>
+        </Border>
+        <Border Classes="workspace diagnostics-workspace" IsVisible="{Binding IsSettingsVisible}">
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16" MaxWidth="760">
+              <StackPanel Spacing="2"><TextBlock Text="BACKGROUND &amp; NOTIFICATIONS" Classes="section-label" /><TextBlock Text="Persistent presence remains capability-driven and inexpensive while idle." Classes="muted" /></StackPanel>
+              <Border Classes="activity-row"><StackPanel Spacing="8"><TextBlock Text="APPLICATION LIFETIME" Classes="section-label" /><TextBlock Text="{Binding PresenceSettingsSummary}" Classes="activity-detail" TextWrapping="Wrap" /><WrapPanel><Button Content="CYCLE CLOSE BEHAVIOR" Classes="quiet-button" Command="{Binding CycleCloseBehaviorCommand}" /><Button Content="CYCLE BACKGROUND MODE" Classes="quiet-button" Command="{Binding CycleBackgroundModeCommand}" /></WrapPanel></StackPanel></Border>
+              <Border Classes="activity-row"><StackPanel Spacing="8"><TextBlock Text="ATTENTION" Classes="section-label" /><TextBlock Text="{Binding NotificationSettingsSummary}" Classes="activity-detail" TextWrapping="Wrap" /><Button Content="TOGGLE QUIET HOURS" Classes="quiet-button" Command="{Binding ToggleQuietHoursCommand}" HorizontalAlignment="Left" /><TextBlock Text="Native permission is optional. When unavailable or denied, Needs You remains durable and attention stays available in-app and through tray state." Classes="muted" TextWrapping="Wrap" /></StackPanel></Border>
+              <Border Classes="activity-row"><StackPanel Spacing="5"><TextBlock Text="PRIVACY" Classes="section-label" /><TextBlock Text="Lock-screen previews are redacted by default. Secrets, credentials, raw logs, and private source content are never valid notification payloads." Classes="activity-detail" TextWrapping="Wrap" /></StackPanel></Border>
+            </StackPanel>
+          </ScrollViewer>
+        </Border>
+        </Panel>
+      </Border>
+
+      <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Classes="workspace terminal-host" IsVisible="{Binding IsTerminalVisible}">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="TERMINAL" Classes="section-label" />
+            <TextBlock Text="{Binding Terminal.Title}" Classes="context-text" />
+          </StackPanel>
+          <ListBox Grid.Row="1" ItemsSource="{Binding Terminal.Lines}" Classes="terminal-output">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:TerminalLine">
+                <TextBlock Text="{Binding Text}" Classes="terminal-line" TextWrapping="Wrap" />
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+            <TextBlock Text="$" Classes="prompt" VerticalAlignment="Center" />
+            <TextBox Grid.Column="1" Text="{Binding Terminal.Input, Mode=TwoWay}" Classes="command-input" KeyDown="OnTerminalKeyDown" />
+            <Button Grid.Column="2" Content="RUN" Classes="primary" Command="{Binding Terminal.ExecuteCommand}" />
+          </Grid>
+        </Grid>
+      </Border>
+
+      <Border Grid.Row="2" Grid.ColumnSpan="3" Classes="activity-deck" IsVisible="{Binding IsActivityDeckVisible}">
+        <Grid RowDefinitions="Auto,*">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock Text="ACTIVITY" Classes="section-label" />
+            <TextBlock Grid.Column="1" Text="{Binding MissionText}" Classes="context-text" Margin="12,0,0,0" />
+              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                <Button Content="FILTER" Classes="quiet-button" Command="{Binding CycleActivityFilterCommand}" />
+                <TextBlock Text="{Binding AttentionText}" Classes="state-text" VerticalAlignment="Center" />
+              </StackPanel>
+          </Grid>
+          <ListBox Grid.Row="1" ItemsSource="{Binding Events}" Classes="event-list" Height="122">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:UiEventLine">
+                <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10">
+                  <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}" Classes="event-time" />
+                  <TextBlock Grid.Column="1" Text="{Binding Kind}" Classes="event-kind" />
+                  <TextBlock Grid.Column="2" Text="{Binding Text}" Classes="event-text" TextTrimming="CharacterEllipsis" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </Border>
+
+      <Border Grid.Row="3" Grid.ColumnSpan="3" Classes="commandbar" IsVisible="{Binding IsCommandBarVisible}">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
+          <TextBlock Text="❯" Classes="prompt" VerticalAlignment="Center" />
+          <Grid Grid.Column="1" RowDefinitions="Auto,Auto" RowSpacing="2">
+            <TextBox Text="{Binding CommandText, Mode=TwoWay}" Classes="command-input" PlaceholderText="Describe a mission, or type / for a command" KeyDown="OnCommandKeyDown" />
+            <TextBlock Grid.Row="1" Text="{Binding VoiceTranscript}" Classes="muted" TextTrimming="CharacterEllipsis" IsVisible="{Binding VoiceIsActive}" />
+          </Grid>
+          <Button Grid.Column="2" Content="MIC" Classes="quiet-button" Command="{Binding ToggleVoiceCommand}" ToolTip.Tip="Start or stop voice input" />
+          <Button Grid.Column="3" Content="RUN  ⌘↵" Classes="primary" Command="{Binding SubmitCommand}" />
+          <Button Grid.Column="4" Content="RESTART" Classes="quiet-button" Command="{Binding RestartUpdateCommand}" IsVisible="{Binding IsUpdateReady}" />
+          <Button Grid.Column="5" Content="CANCEL" Classes="quiet-button" Command="{Binding CancelCommand}" />
+        </Grid>
+      </Border>
+
+      <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Classes="performance-overlay" IsVisible="{Binding IsPerformanceOverlayVisible}">
+        <StackPanel Spacing="4">
+          <TextBlock Text="PERFORMANCE" Classes="section-label" />
+          <TextBlock Text="{Binding CpuText}" Classes="diagnostic-text" />
+          <TextBlock Text="{Binding QueueText}" Classes="diagnostic-text" />
+          <TextBlock Text="{Binding LatencyText}" Classes="diagnostic-text" />
+          <TextBlock Text="{Binding VoiceDiagnosticsText}" Classes="diagnostic-text" TextWrapping="Wrap" />
+          <TextBlock Text="{Binding VoiceSettingsText}" Classes="muted" TextWrapping="Wrap" />
+          <TextBlock Text="{Binding UiPipelineText}" Classes="muted" TextWrapping="Wrap" />
+          <TextBlock Text="{Binding VersionText}" Classes="diagnostic-text" />
+          <TextBlock Text="{Binding UpdateDetailsText}" Classes="muted" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <Border Classes="command-palette" IsVisible="{Binding IsCommandPaletteOpen}">
+      <Grid RowDefinitions="Auto,*" Width="640" MaxHeight="520">
+          <TextBox Text="{Binding CommandSearchText, Mode=TwoWay}" Classes="palette-input" PlaceholderText="Search commands" KeyDown="OnPaletteKeyDown" />
+        <ListBox Grid.Row="1" ItemsSource="{Binding CommandResults}" Classes="palette-results">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:CommandItemViewModel">
+              <Button Command="{Binding Command}" Classes="palette-item">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+                  <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding Title}" Classes="palette-title" />
+                    <TextBlock Text="{Binding Description}" Classes="palette-description" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="1" Text="{Binding Shortcut}" Classes="shortcut" />
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Grid>
+    </Border>
+  </Panel>
+</UserControl>

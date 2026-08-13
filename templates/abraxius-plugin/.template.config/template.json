@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Abraxius",
+  "classifications": ["Abraxius", "Plugin"],
+  "identity": "Abraxius.Plugin.Template.Managed",
+  "name": "Abraxius managed out-of-process plugin",
+  "shortName": "abraxius-plugin",
+  "sourceName": "ExamplePlugin",
+  "preferNameDirectory": true
+}

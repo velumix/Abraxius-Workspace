@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Plugins</RootNamespace>
+    <AssemblyName>Abraxius.Plugins</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Plugin.Contracts/Abraxius.Plugin.Contracts.csproj" />
+    <ProjectReference Include="../Abraxius.Security/Abraxius.Security.csproj" />
+    <ProjectReference Include="../Abraxius.Fabric/Abraxius.Fabric.csproj" />
+    <PackageReference Include="Grpc.Net.Client" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><IsPackable>false</IsPackable><RootNamespace>Abraxius.Fabric.Tests</RootNamespace></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Abraxius.Fabric/Abraxius.Fabric.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Runtime/Abraxius.Runtime.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets><IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets></PackageReference>
+  </ItemGroup>
+</Project>

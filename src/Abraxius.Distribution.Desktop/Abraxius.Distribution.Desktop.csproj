@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Distribution.Desktop</RootNamespace>
+    <AssemblyName>Abraxius.Distribution.Desktop</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Distribution/Abraxius.Distribution.csproj" />
+    <PackageReference Include="Velopack" />
+  </ItemGroup>
+</Project>

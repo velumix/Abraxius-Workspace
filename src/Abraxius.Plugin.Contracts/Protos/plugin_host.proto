@@ -1,0 +1,53 @@
+syntax = "proto3";
+option csharp_namespace = "Abraxius.Plugin.Contracts.Protocol";
+package abraxius.plugins.v1;
+
+service PluginHostControl {
+  rpc Handshake (PluginHostHello) returns (PluginHostWelcome);
+  rpc Invoke (PluginInvokeRequest) returns (PluginInvokeResponse);
+  rpc Heartbeat (PluginHeartbeatRequest) returns (PluginHeartbeatResponse);
+  rpc Stop (PluginStopRequest) returns (PluginStopResponse);
+}
+
+message PluginHostHello {
+  string session_id = 1;
+  string nonce = 2;
+  string plugin_id = 3;
+  string plugin_version = 4;
+  string package_hash = 5;
+  uint32 minimum_protocol = 6;
+  uint32 maximum_protocol = 7;
+  repeated string features = 8;
+}
+
+message PluginHostWelcome {
+  bool accepted = 1;
+  string reason = 2;
+  uint32 selected_protocol = 3;
+  string plugin_api = 4;
+  string host_id = 5;
+  string registration_json = 6;
+  repeated string features = 7;
+}
+
+message PluginInvokeRequest {
+  string session_id = 1;
+  string invocation_id = 2;
+  string contribution_id = 3;
+  string payload_json = 4;
+  int64 timeout_milliseconds = 5;
+  string trace_parent = 6;
+}
+
+message PluginInvokeResponse {
+  string invocation_id = 1;
+  string status = 2;
+  string payload_json = 3;
+  string error_code = 4;
+  string error_message = 5;
+}
+
+message PluginHeartbeatRequest { string session_id = 1; }
+message PluginHeartbeatResponse { bool healthy = 1; int64 working_set_bytes = 2; int64 process_cpu_milliseconds = 3; }
+message PluginStopRequest { string session_id = 1; string reason = 2; }
+message PluginStopResponse { bool accepted = 1; }

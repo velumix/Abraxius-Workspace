@@ -1,0 +1,9 @@
+<Project>
+  <Target Name="ValidateAbraxiusPlugin" BeforeTargets="Build">
+    <Error Condition="!Exists('$(AbraxiusPluginManifestFile)')" Text="Abraxius plugin manifest not found: $(AbraxiusPluginManifestFile)" />
+    <Error Condition="'$(OutputType)' == 'Exe'" Text="Managed Abraxius plugin payloads must be libraries hosted by Abraxius.PluginHost." />
+  </Target>
+  <ItemGroup>
+    <None Include="$(AbraxiusPluginManifestFile)" Pack="true" PackagePath="abraxius.plugin.json" Visible="true" Condition="Exists('$(AbraxiusPluginManifestFile)')" />
+  </ItemGroup>
+</Project>

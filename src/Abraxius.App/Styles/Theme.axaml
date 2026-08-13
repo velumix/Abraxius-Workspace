@@ -1,0 +1,234 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Styles.Resources>
+    <!-- Abraxius design tokens: a small neutral surface scale with semantic state accents. -->
+    <SolidColorBrush x:Key="BackgroundBrush" Color="#0B0F14" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#111821" />
+    <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#151F2A" />
+    <SolidColorBrush x:Key="SurfaceOverlayBrush" Color="#18232E" />
+    <SolidColorBrush x:Key="SelectionBrush" Color="#203B40" />
+    <SolidColorBrush x:Key="LineBrush" Color="#26313C" />
+    <SolidColorBrush x:Key="TextBrush" Color="#E8EEF3" />
+    <SolidColorBrush x:Key="MutedBrush" Color="#8D9AA6" />
+    <SolidColorBrush x:Key="DimBrush" Color="#5C6A76" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#43D3C5" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#F2B65D" />
+    <SolidColorBrush x:Key="ErrorBrush" Color="#FF6B7A" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#62D99A" />
+  </Styles.Resources>
+
+  <Style Selector="Window">
+    <Setter Property="FontFamily" Value="Cascadia Mono,DejaVu Sans Mono" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+  </Style>
+  <Style Selector="Border.topbar">
+    <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+    <Setter Property="Padding" Value="14,10" />
+  </Style>
+  <Style Selector="Border.rail">
+    <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+    <Setter Property="Padding" Value="6,12" />
+  </Style>
+  <Style Selector="Border.workspace">
+    <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+    <Setter Property="Padding" Value="16" />
+  </Style>
+  <Style Selector="Border.inspector">
+    <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+    <Setter Property="Padding" Value="16" />
+    <Setter Property="Margin" Value="12,0,0,0" />
+    <Setter Property="MinWidth" Value="260" />
+  </Style>
+  <Style Selector="Border.activity-deck">
+    <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+    <Setter Property="Padding" Value="10,8" />
+  </Style>
+  <Style Selector="Border.commandbar">
+    <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+    <Setter Property="Padding" Value="9,7" />
+  </Style>
+  <Style Selector="Border.performance-overlay">
+    <Setter Property="Background" Value="{StaticResource SurfaceOverlayBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="14" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+    <Setter Property="Margin" Value="18" />
+    <Setter Property="Width" Value="250" />
+  </Style>
+  <Style Selector="Border.command-palette">
+    <Setter Property="Background" Value="{StaticResource SurfaceOverlayBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="10" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+    <Setter Property="Margin" Value="0,58,0,0" />
+    <Setter Property="ZIndex" Value="20" />
+  </Style>
+  <Style Selector="Border.agent-item">
+    <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+    <Setter Property="Padding" Value="14" />
+    <Setter Property="Margin" Value="0,0,10,10" />
+    <Setter Property="MinWidth" Value="220" />
+    <Setter Property="MaxWidth" Value="320" />
+  </Style>
+  <Style Selector="Border.activity-row">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="8,6" />
+  </Style>
+  <Style Selector="Border.chat-bubble">
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="12,9" />
+    <Setter Property="MaxWidth" Value="760" />
+  </Style>
+  <Style Selector="Border.chat-bubble.assistant">
+    <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+  </Style>
+  <Style Selector="Border.chat-bubble.user">
+    <Setter Property="Background" Value="{StaticResource SelectionBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="Border.inspector-rule">
+    <Setter Property="Height" Value="1" />
+    <Setter Property="Background" Value="{StaticResource LineBrush}" />
+    <Setter Property="Margin" Value="0,4" />
+  </Style>
+
+  <Style Selector="TextBlock.brand">
+    <Setter Property="FontSize" Value="16" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBlock.context-text, TextBlock.system-status">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBlock.status, TextBlock.state-text">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBlock.section-label">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="LetterSpacing" Value="1.2" />
+  </Style>
+  <Style Selector="TextBlock.mission-title, TextBlock.inspector-title">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="TextBlock.executor-row, TextBlock.inspector-row, TextBlock.evidence-row">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+  </Style>
+  <Style Selector="TextBlock.muted, TextBlock.event-time, TextBlock.activity-detail, TextBlock.agent-detail, TextBlock.palette-description">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+  </Style>
+  <Style Selector="TextBlock.event-kind, TextBlock.activity-glyph">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="TextBlock.event-text, TextBlock.agent-name, TextBlock.activity-title, TextBlock.terminal-line, TextBlock.diagnostic-text">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="TextBlock.agent-name">
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+  <Style Selector="TextBlock.chat-speaker">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="TextBlock.chat-text">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="TextBlock.chat-state">
+    <Setter Property="FontSize" Value="9" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="FontStyle" Value="Italic" />
+  </Style>
+  <Style Selector="TextBlock.error-text">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+  </Style>
+  <Style Selector="TextBlock.prompt">
+    <Setter Property="FontSize" Value="16" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="Button.rail-button">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Height" Value="36" />
+  </Style>
+  <Style Selector="Button.rail-button:pointerover, Button.rail-button.active">
+    <Setter Property="Background" Value="{StaticResource SelectionBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+  </Style>
+  <Style Selector="Button.view-button, Button.quiet-button">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="Padding" Value="9,5" />
+  </Style>
+  <Style Selector="Button.view-button:pointerover, Button.quiet-button:pointerover">
+    <Setter Property="Background" Value="{StaticResource SelectionBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="Button.primary">
+    <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+    <Setter Property="Foreground" Value="#071012" />
+    <Setter Property="Padding" Value="14,6" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="FontSize" Value="10" />
+  </Style>
+  <Style Selector="TextBox.command-input, TextBox.palette-input">
+    <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    <Setter Property="Padding" Value="9,6" />
+  </Style>
+  <Style Selector="TextBox.palette-input">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Margin" Value="0,0,0,8" />
+  </Style>
+  <Style Selector="ListBox.event-list, ListBox.activity-stream, ListBox.agent-grid, ListBox.terminal-output, ListBox.palette-results, ListBox.chat-list">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="Button.palette-item">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="Padding" Value="10,8" />
+  </Style>
+  <Style Selector="TextBlock.palette-title">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+  </Style>
+  <Style Selector="TextBlock.shortcut">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+    <Setter Property="Background" Value="{StaticResource SelectionBrush}" />
+  </Style>
+</Styles>

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Core</RootNamespace>
+    <AssemblyName>Abraxius.Core</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Protocol/Abraxius.Protocol.csproj" />
+  </ItemGroup>
+</Project>

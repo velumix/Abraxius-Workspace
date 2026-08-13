@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <AbraxiusPluginManifestFile Condition="'$(AbraxiusPluginManifestFile)' == ''">$(MSBuildProjectDirectory)/abraxius.plugin.json</AbraxiusPluginManifestFile>
+    <AbraxiusPluginApiVersion Condition="'$(AbraxiusPluginApiVersion)' == ''">1.0</AbraxiusPluginApiVersion>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,8 @@
+axl/1
+batch {
+  c#1 find code q="ExecutionGraph" lim=20
+  c#2 call @cap:git.status
+  c#3 memory query q="ExecutionGraph" lim=8
+  c#4 synth obj="combine evidence" dep=[c#1 c#2 c#3]
+  c#5 verify obj="verify synthesis" dep=[c#4]
+}

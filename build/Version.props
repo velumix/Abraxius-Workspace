@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <!-- The release workflow validates tags against this single product version source. -->
+    <AbraxiusVersion Condition="'$(AbraxiusVersion)' == ''">0.1.0</AbraxiusVersion>
+    <AbraxiusPackId Condition="'$(AbraxiusPackId)' == ''">Abraxius</AbraxiusPackId>
+    <AbraxiusDisplayName Condition="'$(AbraxiusDisplayName)' == ''">Abraxius</AbraxiusDisplayName>
+    <AbraxiusRepository Condition="'$(AbraxiusRepository)' == ''">velumix/Abraxius</AbraxiusRepository>
+    <AbraxiusReleaseChannel Condition="'$(AbraxiusReleaseChannel)' == ''">stable</AbraxiusReleaseChannel>
+    <AbraxiusGitCommit Condition="'$(AbraxiusGitCommit)' == ''">unknown</AbraxiusGitCommit>
+    <AbraxiusBuildTimestamp Condition="'$(AbraxiusBuildTimestamp)' == ''">unknown</AbraxiusBuildTimestamp>
+
+    <VersionPrefix>$(AbraxiusVersion)</VersionPrefix>
+    <Version>$(AbraxiusVersion)</Version>
+    <AssemblyVersion>$(AbraxiusVersion).0</AssemblyVersion>
+    <FileVersion>$(AbraxiusVersion).0</FileVersion>
+    <InformationalVersion>$(AbraxiusVersion)+$(AbraxiusGitCommit)</InformationalVersion>
+    <Authors Condition="'$(Authors)' == ''">Abraxius</Authors>
+    <Company Condition="'$(Company)' == ''">Abraxius</Company>
+    <Product Condition="'$(Product)' == ''">$(AbraxiusDisplayName)</Product>
+    <Copyright Condition="'$(Copyright)' == ''">Copyright © Abraxius contributors</Copyright>
+  </PropertyGroup>
+</Project>

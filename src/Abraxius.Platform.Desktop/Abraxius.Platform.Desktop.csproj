@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Platform.Desktop</RootNamespace>
+    <AssemblyName>Abraxius.Platform.Desktop</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Platform/Abraxius.Platform.csproj" />
+    <ProjectReference Include="../Abraxius.Voice/Abraxius.Voice.csproj" />
+  </ItemGroup>
+</Project>

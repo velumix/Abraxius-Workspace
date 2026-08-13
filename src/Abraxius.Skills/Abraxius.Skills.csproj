@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Skills</RootNamespace>
+    <AssemblyName>Abraxius.Skills</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Protocol/Abraxius.Protocol.csproj" />
+    <ProjectReference Include="../Abraxius.Core/Abraxius.Core.csproj" />
+    <ProjectReference Include="../Abraxius.Axl/Abraxius.Axl.csproj" />
+    <ProjectReference Include="../Abraxius.Memory/Abraxius.Memory.csproj" />
+    <ProjectReference Include="../Abraxius.Agents/Abraxius.Agents.csproj" />
+  </ItemGroup>
+</Project>

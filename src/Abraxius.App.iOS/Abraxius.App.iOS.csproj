@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-ios</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Abraxius.App.iOS</RootNamespace>
+    <AssemblyName>Abraxius.iOS</AssemblyName>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.App/Abraxius.App.csproj" />
+    <ProjectReference Include="../Abraxius.Platform/Abraxius.Platform.csproj" />
+    <PackageReference Include="Avalonia.iOS" />
+  </ItemGroup>
+</Project>

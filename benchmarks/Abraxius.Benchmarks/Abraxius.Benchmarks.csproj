@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Abraxius.Benchmarks</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Abraxius.Evaluation/Abraxius.Evaluation.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Scheduler/Abraxius.Scheduler.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Core/Abraxius.Core.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Platform/Abraxius.Platform.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Protocol/Abraxius.Protocol.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Memory/Abraxius.Memory.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Models/Abraxius.Models.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Voice/Abraxius.Voice.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Axl/Abraxius.Axl.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Agents/Abraxius.Agents.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Debrief/Abraxius.Debrief.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Skills/Abraxius.Skills.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Progression/Abraxius.Progression.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Presence/Abraxius.Presence.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Security/Abraxius.Security.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Artifacts/Abraxius.Artifacts.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Fabric/Abraxius.Fabric.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Compute/Abraxius.Compute.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Plugins/Abraxius.Plugins.csproj" />
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+</Project>

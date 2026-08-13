@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><OutputType>Exe</OutputType><RootNamespace>Abraxius.Node</RootNamespace><AssemblyName>abraxius-node</AssemblyName></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Fabric/Abraxius.Fabric.csproj" />
+    <ProjectReference Include="../Abraxius.Compute/Abraxius.Compute.csproj" />
+    <ProjectReference Include="../Abraxius.Plugins/Abraxius.Plugins.csproj" />
+    <ProjectReference Include="../Abraxius.PluginHost/Abraxius.PluginHost.csproj" ReferenceOutputAssembly="false" />
+    <PackageReference Include="Grpc.AspNetCore" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Runtime</RootNamespace>
+    <AssemblyName>Abraxius.Runtime</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Protocol/Abraxius.Protocol.csproj" />
+    <ProjectReference Include="../Abraxius.Platform/Abraxius.Platform.csproj" />
+    <ProjectReference Include="../Abraxius.Core/Abraxius.Core.csproj" />
+    <ProjectReference Include="../Abraxius.Scheduler/Abraxius.Scheduler.csproj" />
+    <ProjectReference Include="../Abraxius.Models/Abraxius.Models.csproj" />
+    <ProjectReference Include="../Abraxius.Memory/Abraxius.Memory.csproj" />
+    <ProjectReference Include="../Abraxius.Agents/Abraxius.Agents.csproj" />
+    <ProjectReference Include="../Abraxius.Axl/Abraxius.Axl.csproj" />
+    <ProjectReference Include="../Abraxius.Lattice/Abraxius.Lattice.csproj" />
+    <ProjectReference Include="../Abraxius.Ledger/Abraxius.Ledger.csproj" />
+    <ProjectReference Include="../Abraxius.Telemetry/Abraxius.Telemetry.csproj" />
+    <ProjectReference Include="../Abraxius.Voice/Abraxius.Voice.csproj" />
+    <ProjectReference Include="../Abraxius.Debrief/Abraxius.Debrief.csproj" />
+    <ProjectReference Include="../Abraxius.Skills/Abraxius.Skills.csproj" />
+    <ProjectReference Include="../Abraxius.Progression/Abraxius.Progression.csproj" />
+    <ProjectReference Include="../Abraxius.Presence/Abraxius.Presence.csproj" />
+    <ProjectReference Include="../Abraxius.Security/Abraxius.Security.csproj" />
+    <ProjectReference Include="../Abraxius.Artifacts/Abraxius.Artifacts.csproj" />
+    <ProjectReference Include="../Abraxius.Evaluation/Abraxius.Evaluation.csproj" />
+    <ProjectReference Include="../Abraxius.Fabric/Abraxius.Fabric.csproj" />
+    <ProjectReference Include="../Abraxius.Compute/Abraxius.Compute.csproj" />
+    <ProjectReference Include="../Abraxius.Plugins/Abraxius.Plugins.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
+  </ItemGroup>
+</Project>

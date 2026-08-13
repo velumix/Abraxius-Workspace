@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Scheduler</RootNamespace>
+    <AssemblyName>Abraxius.Scheduler</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Protocol/Abraxius.Protocol.csproj" />
+    <ProjectReference Include="../Abraxius.Core/Abraxius.Core.csproj" />
+    <ProjectReference Include="../Abraxius.Platform/Abraxius.Platform.csproj" />
+  </ItemGroup>
+</Project>

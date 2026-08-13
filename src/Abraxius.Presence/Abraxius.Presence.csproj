@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Presence</RootNamespace>
+    <AssemblyName>Abraxius.Presence</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Protocol/Abraxius.Protocol.csproj" />
+    <ProjectReference Include="../Abraxius.Agents/Abraxius.Agents.csproj" />
+    <ProjectReference Include="../Abraxius.Platform/Abraxius.Platform.csproj" />
+    <ProjectReference Include="../Abraxius.Skills/Abraxius.Skills.csproj" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
+</Project>

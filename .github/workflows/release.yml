@@ -1,0 +1,235 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'v*.*.*-*'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the draft after validation
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      channel: ${{ steps.version.outputs.channel }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        shell: bash
+        run: |
+          version="$(sed -n 's/.*<AbraxiusVersion[^>]*>\([^<]*\)<.*/\1/p' build/Version.props | head -n 1)"
+          channel="stable"
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then channel="beta"; fi
+          if [[ "$GITHUB_REF_NAME" == *nightly* ]]; then channel="development"; fi
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then bash packaging/validate-tag.sh "$GITHUB_REF_NAME"; fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+
+  desktop:
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            shell: pwsh
+          - os: windows-latest
+            rid: win-arm64
+            shell: pwsh
+          - os: ubuntu-latest
+            rid: linux-x64
+            shell: bash
+          - os: ubuntu-24.04-arm
+            rid: linux-arm64
+            shell: bash
+          - os: macos-latest
+            rid: osx-arm64
+            shell: bash
+          - os: macos-13
+            rid: osx-x64
+            shell: bash
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Install Linux packaging tools
+        if: startsWith(matrix.rid, 'linux-')
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes imagemagick libfuse2
+          convert -background none assets/abraxius.svg -resize 256x256 /tmp/abraxius.png
+          echo "ABRAXIUS_ICON_PATH=/tmp/abraxius.png" >> "$GITHUB_ENV"
+      - name: Prepare Windows package icon
+        if: startsWith(matrix.rid, 'win-')
+        shell: pwsh
+        run: |
+          choco install imagemagick --no-progress -y
+          magick assets/abraxius.svg -define icon:auto-resize=256,128,64,48,32,16 "$env:RUNNER_TEMP/abraxius.ico"
+          "ABRAXIUS_ICON_PATH=$env:RUNNER_TEMP/abraxius.ico" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Prepare macOS package icon
+        if: startsWith(matrix.rid, 'osx-')
+        shell: bash
+        run: |
+          brew install imagemagick librsvg
+          magick assets/abraxius.svg -resize 512x512 "$RUNNER_TEMP/abraxius.icns"
+          echo "ABRAXIUS_ICON_PATH=$RUNNER_TEMP/abraxius.icns" >> "$GITHUB_ENV"
+      - name: Restore and test
+        run: dotnet test Abraxius.sln --configuration Release
+      - name: Package Windows
+        if: startsWith(matrix.rid, 'win-')
+        shell: pwsh
+        env:
+          ABRAXIUS_REQUIRE_SIGNING: ${{ needs.validate.outputs.channel == 'stable' && 'true' || 'false' }}
+          ABRAXIUS_WINDOWS_CERTIFICATE_BASE64: ${{ secrets.ABRAXIUS_WINDOWS_CERTIFICATE_BASE64 }}
+          ABRAXIUS_WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.ABRAXIUS_WINDOWS_CERTIFICATE_PASSWORD }}
+        run: ./packaging/build-desktop.ps1 -Rid '${{ matrix.rid }}' -Version '${{ needs.validate.outputs.version }}' -Channel '${{ needs.validate.outputs.channel }}'
+      - name: Package Unix desktop
+        if: startsWith(matrix.rid, 'linux-') || startsWith(matrix.rid, 'osx-')
+        shell: bash
+        env:
+          ABRAXIUS_REQUIRE_SIGNING: ${{ needs.validate.outputs.channel == 'stable' && 'true' || 'false' }}
+          ABRAXIUS_MACOS_SIGNING_IDENTITY: ${{ secrets.ABRAXIUS_MACOS_SIGNING_IDENTITY }}
+        run: ./packaging/build-desktop.sh '${{ matrix.rid }}' '${{ needs.validate.outputs.version }}' '${{ needs.validate.outputs.channel }}'
+      - name: Notarize macOS package
+        if: startsWith(matrix.rid, 'osx-')
+        shell: bash
+        env:
+          ABRAXIUS_APPLE_ID: ${{ secrets.ABRAXIUS_APPLE_ID }}
+          ABRAXIUS_APPLE_TEAM_ID: ${{ secrets.ABRAXIUS_APPLE_TEAM_ID }}
+          ABRAXIUS_APPLE_APP_PASSWORD: ${{ secrets.ABRAXIUS_APPLE_APP_PASSWORD }}
+        run: |
+          artifact="$(find "artifacts/releases/${{ matrix.rid }}" -type f \( -name '*.pkg' -o -name '*.dmg' \) | head -n 1)"
+          if [[ -z "$artifact" ]]; then
+            if [[ '${{ needs.validate.outputs.channel }}' == 'stable' ]]; then
+              echo 'No notarizable macOS package was produced.' >&2
+              exit 1
+            fi
+            echo 'No notarizable macOS package in this development artifact.'
+          else
+            ./packaging/notarize-macos.sh "$artifact" $([[ '${{ needs.validate.outputs.channel }}' == 'stable' ]] && echo --required || true)
+          fi
+      - name: Verify package contents
+        shell: bash
+        run: ./packaging/verify-artifacts.sh "artifacts/releases/${{ matrix.rid }}"
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.rid }}
+          path: artifacts/releases/${{ matrix.rid }}
+          if-no-files-found: error
+
+  browser:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Publish WebAssembly
+        run: dotnet publish src/Abraxius.App.Browser/Abraxius.App.Browser.csproj --configuration Release --output artifacts/browser
+      - uses: actions/upload-artifact@v4
+        with:
+          name: browser-${{ needs.validate.outputs.version }}
+          path: artifacts/browser
+          if-no-files-found: error
+
+  android:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Install Android workload
+        run: dotnet workload install android
+      - name: Publish unsigned Android validation artifact
+        run: dotnet publish src/Abraxius.App.Android/Abraxius.App.Android.csproj --configuration Release --framework net10.0-android --output artifacts/android -p:AndroidPackageFormat=apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-validation-${{ needs.validate.outputs.version }}
+          path: artifacts/android
+          if-no-files-found: error
+
+  ios:
+    needs: validate
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Install iOS workload
+        run: dotnet workload install ios
+      - name: Publish unsigned iOS validation artifact
+        run: dotnet publish src/Abraxius.App.iOS/Abraxius.App.iOS.csproj --configuration Release --framework net10.0-ios --runtime ios-arm64 --output artifacts/ios -p:EnableCodeSigning=false -p:CodesignKey= -p:CodesignProvision=
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-validation-${{ needs.validate.outputs.version }}
+          path: artifacts/ios
+          if-no-files-found: error
+
+  publish:
+    needs: [validate, desktop, browser, android, ios]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: desktop-*
+          path: artifacts/releases
+          merge-multiple: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: browser-${{ needs.validate.outputs.version }}
+          path: artifacts/browser
+      - name: Create release manifest and checksums
+        shell: bash
+        run: |
+          platforms=()
+          for directory in artifacts/releases/*; do
+            [[ -d "$directory" ]] || continue
+            platforms+=("${directory##*/desktop-}")
+          done
+          ./packaging/create-release-manifest.sh '${{ needs.validate.outputs.version }}' '${{ needs.validate.outputs.channel }}' artifacts/release-manifest.json "${platforms[@]}"
+          find artifacts/releases -type f -not -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > artifacts/SHA256SUMS.txt
+      - name: Attest release artifacts
+        uses: actions/attest@v4
+        with:
+          subject-path: 'artifacts/releases/**/*'
+      - name: Create immutable draft GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --draft \
+            --title "Abraxius ${{ needs.validate.outputs.version }}" \
+            --notes-file packaging/release-notes.md \
+            artifacts/releases/*/* artifacts/release-manifest.json artifacts/SHA256SUMS.txt
+      - name: Publish after validation
+        if: github.event_name == 'push' || inputs.publish == true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --draft=false

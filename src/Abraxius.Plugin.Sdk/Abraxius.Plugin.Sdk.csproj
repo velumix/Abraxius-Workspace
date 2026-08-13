@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Plugin.Sdk</RootNamespace>
+    <AssemblyName>Abraxius.Plugin.Sdk</AssemblyName>
+    <IsPackable>true</IsPackable>
+    <PackageId>Abraxius.Plugin.Sdk</PackageId>
+    <Version>1.0.0</Version>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>contentFiles</ContentTargetFolders>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Plugin.Contracts/Abraxius.Plugin.Contracts.csproj" PrivateAssets="All" />
+    <ProjectReference Include="../Abraxius.Plugin.Managed.Abstractions/Abraxius.Plugin.Managed.Abstractions.csproj" PrivateAssets="All" />
+    <None Include="buildTransitive/Abraxius.Plugin.Sdk.props" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="buildTransitive/Abraxius.Plugin.Sdk.targets" Pack="true" PackagePath="buildTransitive/" />
+  </ItemGroup>
+</Project>

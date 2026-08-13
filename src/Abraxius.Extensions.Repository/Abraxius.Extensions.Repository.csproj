@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Extensions.Repository</RootNamespace>
+    <AssemblyName>Abraxius.Extensions.Repository</AssemblyName>
+    <IsPackable>true</IsPackable>
+    <PackageId>Abraxius.Extensions.Repository</PackageId>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Plugin.Contracts/Abraxius.Plugin.Contracts.csproj" />
+    <ProjectReference Include="../Abraxius.Plugin.Managed.Abstractions/Abraxius.Plugin.Managed.Abstractions.csproj" />
+    <None Include="abraxius.plugin.json" Pack="true" PackagePath="abraxius.plugin.json" />
+  </ItemGroup>
+</Project>

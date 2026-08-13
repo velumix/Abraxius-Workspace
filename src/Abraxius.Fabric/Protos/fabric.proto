@@ -1,0 +1,103 @@
+syntax = "proto3";
+option csharp_namespace = "Abraxius.Fabric.Protocol";
+package abraxius.fabric.v1;
+
+service FabricControl {
+  rpc Negotiate (ProtocolHello) returns (ProtocolWelcome);
+  rpc Execute (LeaseOffer) returns (LeaseResult);
+  rpc Control (stream ControlEnvelope) returns (stream ControlEnvelope);
+  rpc Transfer (stream BlobChunk) returns (TransferReceipt);
+}
+
+message ProtocolHello {
+  string fabric_id = 1;
+  string node_id = 2;
+  uint32 minimum_version = 3;
+  uint32 maximum_version = 4;
+  repeated string features = 5;
+  string certificate_fingerprint = 6;
+}
+
+message ProtocolWelcome {
+  bool accepted = 1;
+  uint32 selected_version = 2;
+  repeated string features = 3;
+  string reason = 4;
+  uint64 coordinator_epoch = 5;
+}
+
+message LeaseOffer {
+  string fabric_id = 1;
+  string session_id = 2;
+  string lease_id = 3;
+  string execution_id = 4;
+  string task_id = 5;
+  string mission_id = 6;
+  uint64 coordinator_epoch = 7;
+  string worker_node_id = 8;
+  uint32 attempt = 9;
+  string idempotency_key = 10;
+  string capability = 11;
+  string work_kind = 12;
+  string operation = 13;
+  map<string,string> parameters = 14;
+  int64 ttl_milliseconds = 15;
+  string authorization_decision_id = 16;
+  string grant_id = 17;
+  string classification = 18;
+  bool side_effecting = 19;
+  string trace_parent = 20;
+  string principal_id = 21;
+  string principal_type = 22;
+  string subject_mission_id = 23;
+  string assignment_id = 24;
+  string agent_instance_id = 25;
+  int64 authorization_expires_unix_ms = 26;
+  repeated string resource_prefixes = 27;
+  int32 cpu_weight = 28;
+  int64 memory_bytes = 29;
+  int64 vram_bytes = 30;
+  string specialist_role = 31;
+}
+
+message LeaseResult {
+  string lease_id = 1;
+  string execution_id = 2;
+  uint32 attempt = 3;
+  string worker_node_id = 4;
+  string status = 5;
+  string summary = 6;
+  string result_hash = 7;
+  repeated string artifact_revision_ids = 8;
+  string rejection_reason = 9;
+  string value_json = 10;
+  uint64 coordinator_epoch = 11;
+}
+
+message ControlEnvelope {
+  string node_id = 1;
+  uint64 node_sequence = 2;
+  string priority = 3;
+  string kind = 4;
+  bytes payload = 5;
+  string trace_parent = 6;
+}
+
+message BlobChunk {
+  string transfer_id = 1;
+  string blob_id = 2;
+  int64 offset = 3;
+  bytes content = 4;
+  string chunk_hash = 5;
+  string final_hash = 6;
+  int64 total_length = 7;
+  bool complete = 8;
+  string classification = 9;
+}
+
+message TransferReceipt {
+  bool accepted = 1;
+  int64 committed_length = 2;
+  string content_hash = 3;
+  string reason = 4;
+}

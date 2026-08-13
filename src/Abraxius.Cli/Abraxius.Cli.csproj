@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Abraxius.Cli</RootNamespace>
+    <AssemblyName>abraxius</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Evaluation/Abraxius.Evaluation.csproj" />
+    <ProjectReference Include="../Abraxius.Runtime/Abraxius.Runtime.csproj" />
+    <ProjectReference Include="../Abraxius.Agents/Abraxius.Agents.csproj" />
+    <ProjectReference Include="../Abraxius.Voice/Abraxius.Voice.csproj" />
+    <ProjectReference Include="../Abraxius.Protocol/Abraxius.Protocol.csproj" />
+    <ProjectReference Include="../Abraxius.Distribution/Abraxius.Distribution.csproj" />
+    <ProjectReference Include="../Abraxius.Distribution.Desktop/Abraxius.Distribution.Desktop.csproj" />
+    <ProjectReference Include="../Abraxius.Axl/Abraxius.Axl.csproj" />
+    <ProjectReference Include="../Abraxius.Axl.Model/Abraxius.Axl.Model.csproj" />
+    <ProjectReference Include="../Abraxius.Memory/Abraxius.Memory.csproj" />
+    <ProjectReference Include="../Abraxius.Debrief/Abraxius.Debrief.csproj" />
+    <ProjectReference Include="../Abraxius.Skills/Abraxius.Skills.csproj" />
+    <ProjectReference Include="../Abraxius.Progression/Abraxius.Progression.csproj" />
+    <ProjectReference Include="../Abraxius.Presence/Abraxius.Presence.csproj" />
+    <ProjectReference Include="../Abraxius.Security/Abraxius.Security.csproj" />
+    <ProjectReference Include="../Abraxius.Artifacts/Abraxius.Artifacts.csproj" />
+    <ProjectReference Include="../Abraxius.Fabric/Abraxius.Fabric.csproj" />
+    <ProjectReference Include="../Abraxius.Compute/Abraxius.Compute.csproj" />
+    <ProjectReference Include="../Abraxius.Plugins/Abraxius.Plugins.csproj" />
+    <ProjectReference Include="../Abraxius.PluginHost/Abraxius.PluginHost.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

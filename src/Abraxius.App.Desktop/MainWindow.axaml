@@ -1,0 +1,11 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="using:Abraxius.App"
+        x:Class="Abraxius.App.Desktop.MainWindow"
+        Title="ABRAXIUS"
+        Width="1500"
+        Height="940"
+        MinWidth="980"
+        MinHeight="640">
+  <app:MainView />
+</Window>

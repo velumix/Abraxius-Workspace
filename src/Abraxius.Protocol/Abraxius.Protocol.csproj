@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Protocol</RootNamespace>
+    <AssemblyName>Abraxius.Protocol</AssemblyName>
+  </PropertyGroup>
+</Project>

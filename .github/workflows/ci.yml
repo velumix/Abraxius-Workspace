@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Restore
+        run: dotnet restore Abraxius.sln
+      - name: Build
+        run: dotnet build Abraxius.sln --configuration Release --no-restore
+      - name: Test
+        run: dotnet test Abraxius.sln --configuration Release --no-build --no-restore
+      - name: Validate packaging scripts
+        shell: bash
+        run: |
+          bash -n packaging/build-desktop.sh
+          bash -n packaging/validate-tag.sh
+          bash -n packaging/create-release-manifest.sh
+          bash -n packaging/verify-artifacts.sh

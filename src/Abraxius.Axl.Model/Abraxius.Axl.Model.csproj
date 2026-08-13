@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Axl.Model</RootNamespace>
+    <AssemblyName>Abraxius.Axl.Model</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Axl/Abraxius.Axl.csproj" />
+    <ProjectReference Include="../Abraxius.Models/Abraxius.Models.csproj" />
+  </ItemGroup>
+</Project>

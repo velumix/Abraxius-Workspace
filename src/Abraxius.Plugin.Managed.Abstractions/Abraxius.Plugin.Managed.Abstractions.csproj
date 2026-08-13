@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Plugin.Managed</RootNamespace>
+    <AssemblyName>Abraxius.Plugin.Managed.Abstractions</AssemblyName>
+    <IsPackable>true</IsPackable>
+    <PackageId>Abraxius.Plugin.Managed.Abstractions</PackageId>
+    <Version>1.0.0</Version>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Plugin.Contracts/Abraxius.Plugin.Contracts.csproj" />
+  </ItemGroup>
+</Project>

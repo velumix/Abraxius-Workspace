@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Plugin.Contracts</RootNamespace>
+    <AssemblyName>Abraxius.Plugin.Contracts</AssemblyName>
+    <IsPackable>true</IsPackable>
+    <PackageId>Abraxius.Plugin.Contracts</PackageId>
+    <Version>1.0.0</Version>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Core.Api" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+    <Protobuf Include="Protos/plugin_host.proto" GrpcServices="Both" />
+  </ItemGroup>
+</Project>

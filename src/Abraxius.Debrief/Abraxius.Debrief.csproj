@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Abraxius.Debrief</RootNamespace>
+    <AssemblyName>Abraxius.Debrief</AssemblyName>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Protocol/Abraxius.Protocol.csproj" />
+    <ProjectReference Include="../Abraxius.Core/Abraxius.Core.csproj" />
+    <ProjectReference Include="../Abraxius.Axl/Abraxius.Axl.csproj" />
+    <ProjectReference Include="../Abraxius.Memory/Abraxius.Memory.csproj" />
+    <ProjectReference Include="../Abraxius.Models/Abraxius.Models.csproj" />
+    <ProjectReference Include="../Abraxius.Agents/Abraxius.Agents.csproj" />
+    <ProjectReference Include="../Abraxius.Voice/Abraxius.Voice.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Abraxius.PluginHost</RootNamespace>
+    <AssemblyName>Abraxius.PluginHost</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.Plugin.Contracts/Abraxius.Plugin.Contracts.csproj" />
+    <ProjectReference Include="../Abraxius.Plugin.Managed.Abstractions/Abraxius.Plugin.Managed.Abstractions.csproj" />
+    <PackageReference Include="Grpc.AspNetCore" />
+  </ItemGroup>
+</Project>

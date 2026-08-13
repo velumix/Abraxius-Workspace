@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Abraxius.App.Desktop</RootNamespace>
+    <AssemblyName>Abraxius.Desktop</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Abraxius.App/Abraxius.App.csproj" />
+    <ProjectReference Include="../Abraxius.Platform/Abraxius.Platform.csproj" />
+    <ProjectReference Include="../Abraxius.Platform.Desktop/Abraxius.Platform.Desktop.csproj" />
+    <ProjectReference Include="../Abraxius.Distribution.Desktop/Abraxius.Distribution.Desktop.csproj" />
+    <ProjectReference Include="../Abraxius.Voice/Abraxius.Voice.csproj" />
+    <ProjectReference Include="../Abraxius.PluginHost/Abraxius.PluginHost.csproj" ReferenceOutputAssembly="false" />
+    <PackageReference Include="Avalonia.Desktop" />
+  </ItemGroup>
+</Project>

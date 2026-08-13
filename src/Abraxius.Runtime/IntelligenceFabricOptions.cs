@@ -14,6 +14,12 @@ public sealed record GatewayConnectionOptions
 
 public sealed record IntelligenceFabricOptions
 {
+    /// <summary>
+    /// Enables the deterministic provider only for tests and explicit offline fixtures.
+    /// Production composition must leave this disabled so an unavailable model is visible
+    /// as an unavailable model instead of being presented as an AI response.
+    /// </summary>
+    public bool UseDeterministicMockModel { get; init; }
     public IntelligenceRoutingPolicy Policy { get; init; } = new();
     public GatewayConnectionOptions OmniRoute { get; init; } = new()
     {
@@ -128,17 +134,17 @@ internal static class IntelligenceFabricFactory
             secretReferences,
             transportSubject);
 
-        if (!configuredExternalGateway || candidates.Count == 0)
+        if (options.UseDeterministicMockModel && (!configuredExternalGateway || candidates.Count == 0))
         {
             var mock = new MockModelProvider();
             providers.Add(mock);
             candidates.Add(new ModelRouteCandidate(new ModelDescriptor
             {
-                ModelId = "mock-reasoner",
+                ModelId = "deterministic-test-model",
                 DisplayName = "Deterministic mock reasoner",
                 Provider = "mock",
                 Gateway = IntelligenceGateway.Mock,
-                Route = "mock-reasoner",
+                Route = "deterministic-test-model",
                 Tier = IntelligenceTier.Free,
                 CostClass = ModelCostClass.Zero,
                 Capabilities = new ModelCapabilities

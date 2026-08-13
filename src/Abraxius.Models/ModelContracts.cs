@@ -94,7 +94,7 @@ public sealed class MockModelProvider : IModelProvider
     private readonly TimeSpan _latency;
     private readonly string _model;
 
-    public MockModelProvider(TimeSpan? latency = null, string model = "mock-reasoner")
+    public MockModelProvider(TimeSpan? latency = null, string model = "deterministic-test-model")
     {
         _latency = latency ?? TimeSpan.FromMilliseconds(200);
         _model = model;
@@ -116,7 +116,7 @@ public sealed class MockModelProvider : IModelProvider
             var message = ExtractLatestUserMessage(request.Prompt);
             return string.IsNullOrWhiteSpace(message)
                 ? "I’m ready. Send a message to begin."
-                : $"Offline demo response: I received \"{message}\". Configure a model provider for full AI answers.";
+                : $"Deterministic test response: I received \"{message}\".";
         }
 
         return $"Deterministic synthesis for: {request.Prompt}";

@@ -93,7 +93,7 @@ internal sealed class ModelWorkExecutor(IModelProvider model, IRuntimeEventSink 
             node.TaskId,
             context.Execution.CorrelationId,
             "runtime.model",
-            modelName ?? "mock-reasoner",
+            modelName ?? "configured-route",
             node.Priority)).ConfigureAwait(false);
 
         var started = Stopwatch.GetTimestamp();

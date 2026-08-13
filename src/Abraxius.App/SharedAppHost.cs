@@ -39,9 +39,16 @@ public partial class App : Application, IAsyncDisposable
         IUpdateService? updateService = null,
         IUpdateCoordinator? updateCoordinator = null)
     {
-        _runtime = AbraxiusRuntimeHost.CreateDefault(new RuntimeHostOptions(
-            UseFileEvidence: false,
-            UseFileLedger: false));
+        // The desktop shell must use the configured intelligence fabric. The previous
+        // composition passed an empty IntelligenceFabricOptions, which activated the
+        // deterministic test fallback and made real chat look like a demo. Production
+        // has no model fallback: a missing/unhealthy gateway is reported as an error.
+        var configured = RuntimeConfigurationLoader.ToHostOptions(RuntimeConfigurationLoader.Load());
+        _runtime = AbraxiusRuntimeHost.CreateDefault(configured with
+        {
+            UseFileEvidence = false,
+            UseFileLedger = false
+        });
         _viewModel = new MainViewModel(_runtime, environment, processService, dispatcher: null, audioCapture: audioCapture, audioPlayback: audioPlayback, updateService: updateService, updateCoordinator: updateCoordinator, ownsRuntime: false);
         return _viewModel;
     }

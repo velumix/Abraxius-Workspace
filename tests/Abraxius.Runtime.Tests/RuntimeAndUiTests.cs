@@ -50,7 +50,8 @@ public sealed class RuntimeAndUiTests
     [Fact]
     public async Task FinalizedMissionFlowsIntoProgressionAsynchronously()
     {
-        await using var runtime = AbraxiusRuntimeHost.CreateDefault(new RuntimeHostOptions(UseFileEvidence: false, UseFileLedger: false, UseFileProgression: false));
+        await using var runtime = AbraxiusRuntimeHost.CreateDefault(new RuntimeHostOptions(UseFileEvidence: false, UseFileLedger: false, UseFileProgression: false,
+            Intelligence: new IntelligenceFabricOptions { UseDeterministicMockModel = true }));
         await runtime.StartAsync();
         var rewarded = new TaskCompletionSource<Abraxius.Progression.MissionRewardRecord>(TaskCreationOptions.RunContinuationsAsynchronously);
         runtime.Progression.RewardCommitted += (_, reward) => rewarded.TrySetResult(reward);
@@ -70,7 +71,8 @@ public sealed class RuntimeAndUiTests
         await using var runtime = AbraxiusRuntimeHost.CreateDefault(new RuntimeHostOptions(
             LedgerPath: Path.Combine(root, "events.jsonl"),
             EvidencePath: Path.Combine(root, "evidence"),
-            UseFileEvidence: true));
+            UseFileEvidence: true,
+            Intelligence: new IntelligenceFabricOptions { UseDeterministicMockModel = true }));
 
         var result = await runtime.RunDemoAsync();
 
@@ -78,6 +80,26 @@ public sealed class RuntimeAndUiTests
         Assert.Equal(6, result.Tasks.Count);
         Assert.All(result.Tasks.Values, task => Assert.Equal(result.ExecutionId, task.ExecutionId));
         Assert.True(File.Exists(Path.Combine(root, "events.jsonl")));
+    }
+
+    [Fact]
+    public async Task ProductionIntelligenceDoesNotInventAResponseWithoutAConfiguredGateway()
+    {
+        await using var runtime = AbraxiusRuntimeHost.CreateDefault(new RuntimeHostOptions(
+            UseFileEvidence: false,
+            UseFileLedger: false,
+            UseFileProgression: false,
+            UseFilePresence: false,
+            UseFileSecurity: false,
+            Intelligence: new IntelligenceFabricOptions()));
+
+        Assert.Equal(0, runtime.Intelligence.Snapshot.CandidateCount);
+
+        var exception = await Assert.ThrowsAsync<IntelligenceRoutingException>(() =>
+            runtime.Model.InferAsync(new ModelRequest("Answer this for the real provider.")).AsTask());
+
+        Assert.Equal("no_eligible_model_route", exception.Error.Code);
+        Assert.DoesNotContain("demo", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -145,7 +167,7 @@ public sealed class RuntimeAndUiTests
         var assistant = Assert.Single(chat.Messages, static message => message.IsAssistant);
         Assert.False(assistant.IsStreaming);
         Assert.False(assistant.IsError);
-        Assert.Contains("Offline demo response", assistant.Text, StringComparison.Ordinal);
+        Assert.Contains("Deterministic test response", assistant.Text, StringComparison.Ordinal);
         Assert.Contains("Explain the scheduler briefly.", assistant.Text, StringComparison.Ordinal);
         Assert.Equal("READY · RESPONSE COMPLETE", chat.Status);
 

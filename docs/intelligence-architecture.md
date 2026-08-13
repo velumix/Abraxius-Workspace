@@ -55,10 +55,12 @@ when the gateway does not expose them.
 
 ## Safety defaults
 
-External gateways are disabled by default. The default host uses a deterministic zero-cost mock
-provider so the CLI, tests, and workstation remain usable offline. Paid inference is disabled by
-default. Unknown cost is never treated as free; production catalogs should explicitly classify
-connected routes and supply quota evidence where available.
+External gateways are disabled by the generic runtime unless an application host configures them.
+The production desktop shell enables its local OmniRoute endpoint with an explicit zero-cost
+`auto/coding:free` candidate. The runtime never inserts a deterministic mock into production
+composition; tests and explicit offline fixtures must opt into that provider. Paid inference is
+disabled by default. Unknown cost is never treated as free; connected production routes must be
+explicitly classified and supply quota evidence where available.
 
 Credentials are read only from a configured environment-variable name and are never included in
 route decisions, logs, or ledger events.

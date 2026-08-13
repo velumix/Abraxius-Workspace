@@ -34,7 +34,7 @@ Example configuration shape:
     "Enabled": true,
     "Endpoint": "http://localhost:20128/v1/chat/completions",
     "DefaultModel": "auto/coding:free",
-    "ApiKeyEnvironmentVariable": "ABRAXIUS_OMNIROUTE_API_KEY"
+    "ApiKeyEnvironmentVariable": "OMNIROUTE_API_KEY"
   },
   "Models": [
     {
@@ -55,4 +55,3 @@ Example configuration shape:
 
 The model catalog is intentionally explicit: it prevents a gateway's opaque `auto` fallback
 chain from being mistaken for a known zero-cost entitlement.
-

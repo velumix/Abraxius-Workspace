@@ -44,7 +44,22 @@ public class OpenAiCompatibleModelProvider : IIntelligenceGatewayProvider, IDisp
         ArgumentNullException.ThrowIfNull(request);
         var started = Stopwatch.GetTimestamp();
         using var httpRequest = CreateRequest(request, stream: false);
-        using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        }
+        catch (KeyNotFoundException)
+        {
+            throw CreateCredentialException();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            throw CreateCredentialException();
+        }
+
+        using (response)
+        {
         var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {
@@ -52,6 +67,7 @@ public class OpenAiCompatibleModelProvider : IIntelligenceGatewayProvider, IDisp
         }
 
         return ParseResult(body, request, Stopwatch.GetElapsedTime(started), ProviderKey);
+        }
     }
 
     public async IAsyncEnumerable<ModelStreamEvent> StreamAsync(
@@ -61,7 +77,22 @@ public class OpenAiCompatibleModelProvider : IIntelligenceGatewayProvider, IDisp
         ArgumentNullException.ThrowIfNull(request);
         var started = Stopwatch.GetTimestamp();
         using var httpRequest = CreateRequest(request, stream: true);
-        using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        }
+        catch (KeyNotFoundException)
+        {
+            throw CreateCredentialException();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            throw CreateCredentialException();
+        }
+
+        using (response)
+        {
         if (!response.IsSuccessStatusCode)
         {
             var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
@@ -146,6 +177,7 @@ public class OpenAiCompatibleModelProvider : IIntelligenceGatewayProvider, IDisp
             Stopwatch.GetElapsedTime(started),
             ProviderKey);
         yield return new ModelStreamEvent.Completed(DateTimeOffset.UtcNow, result);
+        }
     }
 
     public async ValueTask<ProviderHealth> CheckHealthAsync(CancellationToken cancellationToken = default)
@@ -173,6 +205,26 @@ public class OpenAiCompatibleModelProvider : IIntelligenceGatewayProvider, IDisp
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
+        }
+        catch (KeyNotFoundException)
+        {
+            return new ProviderHealth
+            {
+                Status = ProviderHealthStatus.Unavailable,
+                ObservedAt = DateTimeOffset.UtcNow,
+                EstimatedLatency = Stopwatch.GetElapsedTime(started),
+                Detail = "credential_unavailable"
+            };
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return new ProviderHealth
+            {
+                Status = ProviderHealthStatus.Unavailable,
+                ObservedAt = DateTimeOffset.UtcNow,
+                EstimatedLatency = Stopwatch.GetElapsedTime(started),
+                Detail = "credential_denied"
+            };
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
         {
@@ -417,6 +469,12 @@ public class OpenAiCompatibleModelProvider : IIntelligenceGatewayProvider, IDisp
             detail,
             transient));
     }
+
+    private ModelProviderException CreateCredentialException() => new(new Abraxius.Protocol.RuntimeError(
+        Abraxius.Protocol.ErrorCategory.Configuration,
+        "provider_credential_unavailable",
+        $"{ProviderKey} credentials are not configured for this gateway.",
+        IsTransient: false));
 }
 
 public sealed class OmniRouteModelProvider : OpenAiCompatibleModelProvider

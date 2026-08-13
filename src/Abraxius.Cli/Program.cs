@@ -19,6 +19,7 @@ using Abraxius.Artifacts;
 using Abraxius.Evaluation;
 using Abraxius.Fabric;
 using Abraxius.Compute;
+using Abraxius.Design;
 using Abraxius.Plugin.Contracts;
 using Abraxius.Plugins;
 using System.Globalization;
@@ -82,6 +83,55 @@ if (command is "plugins" or "plugin")
         default: Console.Error.WriteLine("Usage: abraxius plugins [list|inspect|install|enable|disable|restart|uninstall|permissions|logs|validate|sources] [--json]"); return 2;
     }
 }
+if (command is "design" or "designs")
+{
+    var configured = RuntimeConfigurationLoader.ToHostOptions(RuntimeConfigurationLoader.Load());
+    await using var designRuntime = AbraxiusRuntimeHost.CreateDefault(configured with { UseFileEvidence = false, UseFileArtifacts = true });
+    await designRuntime.StartAsync();
+    var subcommand = args.Skip(1).FirstOrDefault()?.ToLowerInvariant() ?? "status";
+    var json = args.Contains("--json", StringComparer.OrdinalIgnoreCase);
+    switch (subcommand)
+    {
+        case "status":
+        {
+            var health = await designRuntime.Design.GetHealthAsync();
+            if (json) Console.WriteLine(JsonSerializer.Serialize(health));
+            else Console.WriteLine($"DESIGN\n\nProvider                {health.Provider}\nState                   {health.State}\nCan generate            {health.CanGenerate}\nMessage                 {health.Message}");
+            return health.State is DesignProviderConnectionState.Failed ? 1 : 0;
+        }
+        case "surfaces":
+            if (json) Console.WriteLine(JsonSerializer.Serialize(designRuntime.Design.Surfaces.List()));
+            else foreach (var surface in designRuntime.Design.Surfaces.List()) Console.WriteLine($"{surface.Id,-28} {surface.Category,-12} {surface.DisplayName}");
+            return 0;
+        case "capture":
+        {
+            var id = args.Skip(2).FirstOrDefault();
+            if (id is null) { Console.Error.WriteLine("Usage: abraxius design capture <surface-id>"); return 2; }
+            var surface = designRuntime.Design.Surfaces.Resolve(new DesignSurfaceId(id));
+            var snapshot = await surface.CaptureAsync(new DesignCaptureRequest(DesignViewportProfile.Expanded, 1920, 1080, Mode: DesignCaptureMode.LiveContent));
+            Console.WriteLine(json ? JsonSerializer.Serialize(snapshot) : $"{snapshot.Surface} {snapshot.Status} {snapshot.ContentIdentity}\n{snapshot.FailureReason ?? "Captured bytes are available to the interactive host."}");
+            return snapshot.Status == DesignCaptureStatus.Captured ? 0 : 1;
+        }
+        case "generate":
+        {
+            var id = args.Skip(2).FirstOrDefault() ?? DesignSurfaceId.ChatWorkspace.Value;
+            var objective = string.Join(' ', args.Skip(3).TakeWhile(value => !value.Equals("--json", StringComparison.OrdinalIgnoreCase)));
+            if (string.IsNullOrWhiteSpace(objective)) { Console.Error.WriteLine("Usage: abraxius design generate <surface-id> <objective>"); return 2; }
+            try
+            {
+                var session = await designRuntime.Design.Orchestrator.GenerateAsync(new DesignSurfaceId(id), objective,
+                    new DesignCaptureRequest(DesignViewportProfile.Expanded, 1920, 1080, Mode: DesignCaptureMode.SyntheticContent),
+                    Abraxius.Security.DataClassification.Internal, 3);
+                if (json) Console.WriteLine(JsonSerializer.Serialize(session));
+                else { Console.WriteLine($"session={session.Id} state={session.State} candidates={session.Generation?.SafeCandidates.Length ?? 0}"); foreach (var candidate in session.Generation?.SafeCandidates ?? []) Console.WriteLine($"  {candidate.Id} {candidate.Title} artifact={candidate.ArtifactReference ?? "none"}"); }
+                return 0;
+            }
+            catch (Exception exception) { Console.Error.WriteLine($"Design generation failed: {exception.Message}"); return 1; }
+        }
+        default: Console.Error.WriteLine("Usage: abraxius design [status|surfaces|capture <surface>|generate <surface> <objective>] [--json]"); return 2;
+    }
+}
+
 if (command is "compute" or "models")
 {
     var configured = RuntimeConfigurationLoader.ToHostOptions(RuntimeConfigurationLoader.Load());

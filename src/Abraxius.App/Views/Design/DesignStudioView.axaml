@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Abraxius.App"
+             x:Class="Abraxius.App.Views.Design.DesignStudioView"
+             x:Name="DesignRoot"
+             x:DataType="vm:MainViewModel">
+  <Border Classes="workspace diagnostics-workspace">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="16">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+        <StackPanel Spacing="3">
+          <TextBlock Text="DESIGN STUDIO" Classes="section-label" />
+          <TextBlock Text="Ask for a better surface. Abraxius captures context, generates candidates, and keeps implementation behind review." Classes="muted" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="{Binding DesignStudio.ProviderStatus}" Classes="state-text" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="300" />
+          <Button Content="CONNECT GOOGLE" Classes="quiet-button" Command="{Binding DesignStudio.ConnectCommand}" />
+          <Button Content="REFRESH" Classes="quiet-button" Command="{Binding DesignStudio.RefreshCommand}" />
+        </StackPanel>
+      </Grid>
+
+      <Border Grid.Row="1" Classes="inspector-card">
+        <Grid ColumnDefinitions="Auto,220,*,Auto,Auto" ColumnSpacing="10">
+          <TextBlock Text="SURFACE" Classes="section-label" VerticalAlignment="Center" />
+          <ComboBox Grid.Column="1" ItemsSource="{Binding DesignStudio.Surfaces}" SelectedItem="{Binding DesignStudio.SelectedSurface, Mode=TwoWay}" DisplayMemberBinding="{Binding Name}" MinHeight="38" />
+          <TextBox Grid.Column="2" Text="{Binding DesignStudio.Objective, Mode=TwoWay}" MinHeight="38" VerticalContentAlignment="Center" PlaceholderText="Describe the design goal…" />
+          <Button Grid.Column="3" Content="GENERATE" Classes="primary" Command="{Binding DesignStudio.GenerateCommand}" />
+          <TextBlock Grid.Column="4" Text="{Binding DesignStudio.Status}" Classes="state-text" VerticalAlignment="Center" />
+        </Grid>
+      </Border>
+
+      <Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+          <StackPanel Spacing="2">
+            <TextBlock Text="CANDIDATES" Classes="section-label" />
+            <TextBlock Text="{Binding DesignStudio.SessionSummary}" Classes="muted" />
+          </StackPanel>
+          <Button Grid.Column="1" Content="REFINE SELECTED" Classes="quiet-button" Command="{Binding DesignStudio.RefineCommand}" />
+          <Button Grid.Column="2" Content="IMPLEMENT SELECTED" Classes="primary" Command="{Binding DesignStudio.ImplementCommand}" />
+        </Grid>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+          <ItemsControl ItemsSource="{Binding DesignStudio.Candidates}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:DesignCandidateRow">
+                <Border Classes="design-candidate-card" Width="360" Margin="0,0,12,12">
+                  <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                      <Border Classes="design-candidate-letter"><TextBlock Classes="design-candidate-letter-text" Text="{Binding Label}" /></Border>
+                      <StackPanel Grid.Column="1" Spacing="2"><TextBlock Text="{Binding Title}" Classes="activity-title" /><TextBlock Text="{Binding Provider}" Classes="muted" /></StackPanel>
+                      <ToggleButton Grid.Column="2" Content="SELECT" Classes="quiet-button" IsChecked="{Binding IsSelected, Mode=TwoWay}" Command="{Binding #DesignRoot.DataContext.DesignStudio.SelectCandidateCommand}" CommandParameter="{Binding}" />
+                    </Grid>
+                    <TextBlock Grid.Row="1" Text="{Binding Viewport}" Classes="mono-text" />
+                    <Border Grid.Row="2" Classes="design-preview">
+                      <Grid>
+                        <Image Source="{Binding PreviewImage}" Stretch="Uniform" IsVisible="{Binding HasPreview}" />
+                        <TextBlock Text="{Binding PreviewStatus}" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      </Grid>
+                    </Border>
+                    <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                      <TextBlock Text="{Binding Artifact}" Classes="mono-text" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Grid.Column="1" Text="{Binding IsSelected, StringFormat='{}{0:SELECTED}'}" Classes="state-text" />
+                    </Grid>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Grid>
+    </Grid>
+  </Border>
+</UserControl>

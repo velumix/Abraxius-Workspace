@@ -20,6 +20,8 @@ using Abraxius.Evaluation;
 using Abraxius.Fabric;
 using Abraxius.Compute;
 using Abraxius.Plugins;
+using Abraxius.Design;
+using Abraxius.Design.Google;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -81,6 +83,7 @@ public sealed class AbraxiusRuntimeHost : IAsyncDisposable
         ComputeRuntime compute,
         FabricRuntime fabric,
         PluginRuntime plugins,
+        DesignRuntime design,
         IReadOnlyDictionary<string, ISpeechCredentialProvider> voiceCredentials,
         ILogger<AbraxiusRuntimeHost> logger,
         IPlatformEnvironment environment)
@@ -109,6 +112,7 @@ public sealed class AbraxiusRuntimeHost : IAsyncDisposable
         Compute = compute;
         Fabric = fabric;
         Plugins = plugins;
+        Design = design;
         VoiceCredentials = voiceCredentials;
         _logger = logger;
         _environment = environment;
@@ -132,6 +136,7 @@ public sealed class AbraxiusRuntimeHost : IAsyncDisposable
     public ComputeRuntime Compute { get; }
     public FabricRuntime Fabric { get; }
     public PluginRuntime Plugins { get; }
+    public DesignRuntime Design { get; }
     public IReadOnlyDictionary<string, ISpeechCredentialProvider> VoiceCredentials { get; }
     public IModelProvider Model => _model;
     public ExecutionResult? LastExecution { get; private set; }
@@ -201,6 +206,10 @@ public sealed class AbraxiusRuntimeHost : IAsyncDisposable
             effectiveOptions.EffectivePluginRootPath,
             new LocalGrpcPluginHostLauncher(),
             PluginHostCommand.ForManagedEntry(effectiveOptions.EffectivePluginHostPath)));
+        var designOptions = new GoogleStitchOptions(
+            ProjectId: System.Environment.GetEnvironmentVariable("ABRAXIUS_STITCH_PROJECT"),
+            OAuthClientId: System.Environment.GetEnvironmentVariable("ABRAXIUS_GOOGLE_OAUTH_CLIENT_ID"));
+        services.AddSingleton(designOptions);
         services.AddSingleton<IFabricNodeRegistry>(fabricRegistry);
         services.AddSingleton<IFabricTransport>(fabricTransport);
         services.AddSingleton<IExecutionPlacementEngine, DeterministicPlacementEngine>();
@@ -217,6 +226,15 @@ public sealed class AbraxiusRuntimeHost : IAsyncDisposable
                 ImmutableHashSet.Create(SecurityActions.SecretUse), reference.Value,
                 GrantScope.Session, DateTimeOffset.UtcNow, DateTimeOffset.MaxValue,
                 "runtime-configuration", "Credential use is limited to the explicitly enabled model transport."));
+        }
+        foreach (var referenceText in new[] { "secret://google/stitch/api-key", "secret://google/stitch/access-token", "secret://google/stitch/refresh-token" })
+        {
+            if (!SecretReference.TryParse(referenceText, out var reference) || modelSecrets.Store.GetMetadataAsync(reference).AsTask().GetAwaiter().GetResult() is null) continue;
+            securityGrants.Issue(new AuthorizationGrant(
+                AuthorizationGrantId.New(), SecuritySubject.System("design-studio"),
+                ImmutableHashSet.Create(SecurityActions.SecretUse), reference.Value,
+                GrantScope.Session, DateTimeOffset.UtcNow, DateTimeOffset.MaxValue,
+                "runtime-configuration", "Design provider credential is limited to the configured Stitch destination."));
         }
         var intelligence = IntelligenceFabricFactory.Create(effectiveOptions.EffectiveIntelligence, secretBroker, securityRedactor,
             modelSecrets.References, modelSecrets.Subject);
@@ -350,6 +368,40 @@ public sealed class AbraxiusRuntimeHost : IAsyncDisposable
                 provider.GetRequiredService<ISecurityApprovalService>(), provider.GetRequiredService<ISandboxService>(),
                 provider.GetRequiredService<IModelEgressPolicy>());
         });
+        services.AddSingleton<IDesignSurfaceRegistry>(_ =>
+        {
+            var registry = new DesignSurfaceRegistry();
+            registry.Register(new DesignableSurface(new DesignSurfaceDescriptor(
+                DesignSurfaceId.ChatWorkspace, "Chat Workspace", DesignSurfaceCategory.Workspace,
+                ["src/Abraxius.App/Views/Chat/ChatView.axaml", "src/Abraxius.App/Views/Chat/ChatView.axaml.cs", "src/Abraxius.App/ChatViewModel.cs", "src/Abraxius.App/UiModels.cs", "src/Abraxius.App/Views/Shell/NavigationRail.axaml", "src/Abraxius.App/Styles/Theme.axaml", "src/Abraxius.Platform/ResponsiveTypes.cs"],
+                ["Enter sends chat", "Shift+Enter inserts a newline", "Ctrl/Cmd+Enter runs a mission", "Streaming can be cancelled"],
+                ["conversation spine", "composer", "navigation rail"], ["Compact", "Medium", "Expanded", "UltraWide"],
+                ["No fake activity", "No purple primary accent", "Generated HTML is reference only"])));
+            registry.Register(new DesignableSurface(new DesignSurfaceDescriptor(
+                DesignSurfaceId.MissionWorkspace, "Mission Workspace", DesignSurfaceCategory.Workspace,
+                ["src/Abraxius.App/Views/Mission/MissionView.axaml", "src/Abraxius.App/UiModels.cs", "src/Abraxius.App/Styles/Theme.axaml"],
+                ["Mission execution remains explicit", "Needs You remains reachable"], ["mission graph", "agent activity"], ["Compact", "Medium", "Expanded", "UltraWide"], ["Preserve mission runtime semantics"])));
+            return registry;
+        });
+        services.AddSingleton<IDesignSourceResolver>(_ => new FileSystemDesignSourceResolver(effectiveOptions.WorkspaceRoot ?? System.Environment.CurrentDirectory));
+        services.AddSingleton<IDesignContextCompiler, DesignContextCompiler>();
+        services.AddSingleton<IGoogleStitchCredentialProvider>(provider => new SecretBrokerGoogleStitchCredentialProvider(
+            provider.GetRequiredService<ISecretBroker>(), designOptions,
+            refresher: provider.GetRequiredService<GoogleStitchOAuthClient>()));
+        services.AddSingleton<GoogleStitchDesignProvider>(provider => new GoogleStitchDesignProvider(new HttpClient(), designOptions, provider.GetRequiredService<IGoogleStitchCredentialProvider>()));
+        services.AddSingleton<GoogleStitchOAuthClient>(provider => new GoogleStitchOAuthClient(
+            provider.GetRequiredService<ISecretStore>(), new HttpClient(),
+            new GoogleStitchOAuthOptions(designOptions.OAuthClientId ?? string.Empty, designOptions.OAuthAuthorizationEndpoint,
+                designOptions.OAuthTokenEndpoint, designOptions.OAuthScope, designOptions.ProjectId),
+            provider.GetRequiredService<IAuthorizationGrantStore>(), provider.GetRequiredService<ISecretBroker>()));
+        services.AddSingleton<IDesignGenerationProvider>(provider => provider.GetRequiredService<GoogleStitchDesignProvider>());
+        services.AddSingleton<IDesignProjectResolver>(provider => new GoogleStitchProjectResolver(provider.GetRequiredService<GoogleStitchDesignProvider>()));
+        services.AddSingleton<IDesignEgressPolicy>(provider => new RuntimeDesignEgressPolicy(provider.GetRequiredService<IModelEgressPolicy>()));
+        services.AddSingleton<IDesignArtifactSink>(provider => new RuntimeDesignArtifactSink(provider.GetRequiredService<IArtifactService>()));
+        services.AddSingleton<DesignRuntime>(provider => new DesignRuntime(
+            provider.GetRequiredService<IDesignSurfaceRegistry>(), provider.GetRequiredService<IDesignGenerationProvider>(), provider.GetRequiredService<IDesignContextCompiler>(),
+            provider.GetRequiredService<IDesignSourceResolver>(), provider.GetRequiredService<IDesignProjectResolver>(), provider.GetRequiredService<IDesignArtifactSink>(), provider.GetRequiredService<IDesignEgressPolicy>(),
+            provider.GetRequiredService<GoogleStitchOAuthClient>()));
         services.AddSingleton<IArtifactStore>(_ => effectiveOptions.UseFileArtifacts && environment.Capabilities.LocalFileSystem
             ? new SqliteArtifactStore(effectiveOptions.EffectiveArtifactDatabasePath)
             : new InMemoryArtifactStore());
@@ -428,6 +480,7 @@ public sealed class AbraxiusRuntimeHost : IAsyncDisposable
             provider.GetRequiredService<ComputeRuntime>(),
             provider.GetRequiredService<FabricRuntime>(),
             provider.GetRequiredService<PluginRuntime>(),
+            provider.GetRequiredService<DesignRuntime>(),
             voiceCredentials,
             provider.GetRequiredService<ILogger<AbraxiusRuntimeHost>>(),
             provider.GetRequiredService<IPlatformEnvironment>()));

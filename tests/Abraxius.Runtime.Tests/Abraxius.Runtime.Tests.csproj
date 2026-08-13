@@ -8,6 +8,8 @@
     <ProjectReference Include="../../src/Abraxius.Telemetry/Abraxius.Telemetry.csproj" />
     <ProjectReference Include="../../src/Abraxius.Protocol/Abraxius.Protocol.csproj" />
     <ProjectReference Include="../../src/Abraxius.App/Abraxius.App.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Design/Abraxius.Design.csproj" />
+    <ProjectReference Include="../../src/Abraxius.Design.Google/Abraxius.Design.Google.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />

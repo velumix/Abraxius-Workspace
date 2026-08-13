@@ -26,6 +26,8 @@
     <ProjectReference Include="../Abraxius.Fabric/Abraxius.Fabric.csproj" />
     <ProjectReference Include="../Abraxius.Compute/Abraxius.Compute.csproj" />
     <ProjectReference Include="../Abraxius.Plugins/Abraxius.Plugins.csproj" />
+    <ProjectReference Include="../Abraxius.Design/Abraxius.Design.csproj" />
+    <ProjectReference Include="../Abraxius.Design.Google/Abraxius.Design.Google.csproj" />
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />

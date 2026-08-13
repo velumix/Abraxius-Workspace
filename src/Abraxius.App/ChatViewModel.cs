@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Input;
 using Abraxius.Models;
 using Abraxius.Protocol;
+using Abraxius.Design;
 
 namespace Abraxius.App;
 
@@ -25,6 +26,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
     private readonly List<(bool IsUser, string Text)> _history = [];
     private readonly IReadOnlyDictionary<string, ChatSpecialistProfile> _specialistProfiles;
     private readonly Func<string, CancellationToken, ValueTask<CapabilityResult>>? _webResearch;
+    private readonly Func<string, CancellationToken, ValueTask<DesignSession>>? _designRequest;
     private readonly string _sessionKey = $"chat:{Guid.NewGuid():N}";
     private CancellationTokenSource? _sendCancellation;
     private string _input = string.Empty;
@@ -46,11 +48,13 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
         IUiDispatcher dispatcher,
         IEnumerable<string>? specialistNames = null,
         IEnumerable<ChatSpecialistProfile>? specialistProfiles = null,
-        Func<string, CancellationToken, ValueTask<CapabilityResult>>? webResearch = null)
+        Func<string, CancellationToken, ValueTask<CapabilityResult>>? webResearch = null,
+        Func<string, CancellationToken, ValueTask<DesignSession>>? designRequest = null)
     {
         _model = model ?? throw new ArgumentNullException(nameof(model));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _webResearch = webResearch;
+        _designRequest = designRequest;
         _specialistProfiles = (specialistProfiles ?? BuiltInChatSpecialists())
             .Where(static profile => !string.IsNullOrWhiteSpace(profile.DisplayName))
             .GroupBy(static profile => profile.DisplayName, StringComparer.OrdinalIgnoreCase)
@@ -201,6 +205,21 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
         await using var streaming = new ChatStreamingBuffer(_dispatcher, output => ReplaceMessageText(assistantId, output));
         try
         {
+            if (_designRequest is not null && IsDesignRequest(text))
+            {
+                Status = "DESIGNING · CAPTURING CURRENT SURFACE";
+                var session = await _designRequest(text, cancellation.Token).ConfigureAwait(false);
+                var summary = session.Generation is { } generation
+                    ? $"I generated {generation.SafeCandidates.Length} design candidate(s) for {session.Surface}. Open Design Studio to compare them, select one, and create the implementation mission."
+                    : "The design session is ready in Design Studio.";
+                streaming.Append(summary);
+                var designText = (await streaming.CompleteAsync()).Trim();
+                ReplaceMessageComplete(assistantId, designText);
+                _history.Add((false, designText));
+                TrimHistory();
+                Status = "READY · DESIGN CANDIDATES AVAILABLE";
+                return;
+            }
             string? researchedText = null;
             string? researchedSource = null;
             string? researchFailure = null;
@@ -561,6 +580,14 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
 
         url = string.Empty;
         return false;
+    }
+
+    private static bool IsDesignRequest(string text)
+    {
+        var normalized = text.Trim().ToLowerInvariant();
+        if (normalized.StartsWith("redesign ", StringComparison.Ordinal) || normalized.StartsWith("make this ui", StringComparison.Ordinal) || normalized.Contains("design studio", StringComparison.Ordinal)) return true;
+        return normalized.Contains("redesign", StringComparison.Ordinal) ||
+            (normalized.Contains("design", StringComparison.Ordinal) && (normalized.Contains("ui", StringComparison.Ordinal) || normalized.Contains("page", StringComparison.Ordinal) || normalized.Contains("surface", StringComparison.Ordinal) || normalized.Contains("chat", StringComparison.Ordinal)));
     }
 
     private void TrimHistory()

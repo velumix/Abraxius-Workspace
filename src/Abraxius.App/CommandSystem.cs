@@ -135,6 +135,7 @@ public enum RailDestination
     Fabric,
     Compute,
     Extensions,
+    DesignStudio,
     NeedsYou,
     Security,
     Diagnostics,

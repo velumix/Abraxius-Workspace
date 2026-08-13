@@ -4,9 +4,11 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Windows.Input;
+using Avalonia.Controls;
 using Abraxius.Axl;
 using Abraxius.Agents;
 using Abraxius.Core;
+using Abraxius.Design;
 using Abraxius.Debrief;
 using Abraxius.Distribution;
 using Abraxius.Memory;
@@ -186,6 +188,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
     private readonly VoiceMetricsCollector _voiceMetrics = new();
     private readonly VoiceConversationOrchestrator _voice;
     private readonly IUpdateService _updates;
+    private readonly DesignStudioViewModel _designStudio;
     private IUpdateCoordinator _updateCoordinator;
     private readonly CancellationTokenSource _voiceLifetime = new();
     private readonly CancellationTokenSource _updateLifetime = new();
@@ -268,6 +271,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         _fabric = new FabricViewModel(runtime.Fabric, _dispatcher);
         _compute = new ComputeViewModel(runtime.Compute, _dispatcher);
         _extensions = new ExtensionsViewModel(runtime.Plugins, _dispatcher);
+        _designStudio = new DesignStudioViewModel(runtime.Design, _dispatcher, ImplementDesignAsync, ConnectGoogleStitchAsync);
         _chat = new ChatViewModel(
             runtime.Model,
             _dispatcher,
@@ -277,7 +281,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
                 definition.Role.ToString(),
                 definition.Mission.Summary,
                 definition.PlanningPolicy.AllowDelegation)),
-            runtime.ReadPublicWebAsync);
+            runtime.ReadPublicWebAsync,
+            GenerateDesignFromChatAsync);
         _terminal = new TerminalViewModel(_dispatcher, new ProcessTerminalSurface(processService));
         _aggregator = new RuntimeUiStateAggregator(runtime.Events, _dispatcher, ApplySnapshot, runtime.Metrics);
         _voiceEvents = new VoiceEventHub();
@@ -324,6 +329,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         SelectNeedsYouCommand = new RelayCommand(_ => { SelectRail(RailDestination.NeedsYou); Forget(RefreshNeedsYouAsync()); });
         SelectSecurityCommand = new RelayCommand(_ => { SelectRail(RailDestination.Security); Forget(RefreshSecurityAsync()); });
         SelectSettingsCommand = new RelayCommand(_ => SelectRail(RailDestination.Settings));
+        SelectDesignStudioCommand = new RelayCommand(_ => SelectRail(RailDestination.DesignStudio));
         ToggleRailCommand = new RelayCommand(_ => IsRailExpanded = !IsRailExpanded);
         RefreshSecurityCommand = new RelayCommand(_ => Forget(RefreshSecurityAsync()));
         ToggleLockdownCommand = new RelayCommand(_ => { _runtime.Security.Kernel.Lockdown = !_runtime.Security.Kernel.Lockdown; Forget(RefreshSecurityAsync()); });
@@ -487,8 +493,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
     public ICommand RejectNeedsYouCommand { get; }
     public ICommand SnoozeNeedsYouCommand { get; }
     public ICommand SelectSettingsCommand { get; }
+    public ICommand SelectDesignStudioCommand { get; }
     public ICommand ToggleRailCommand { get; }
     public ICommand RunChatAsMissionCommand { get; }
+    public DesignStudioViewModel DesignStudio => _designStudio;
+
+    private async Task ConnectGoogleStitchAsync()
+    {
+        await _runtime.Design.ConnectGoogleAsync().ConfigureAwait(true);
+    }
     public ICommand CycleCloseBehaviorCommand { get; }
     public ICommand CycleBackgroundModeCommand { get; }
     public ICommand ToggleQuietHoursCommand { get; }
@@ -569,10 +582,11 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
     public bool IsFabricVisible => SelectedRail == RailDestination.Fabric;
     public bool IsComputeVisible => SelectedRail == RailDestination.Compute;
     public bool IsExtensionsVisible => SelectedRail == RailDestination.Extensions;
+    public bool IsDesignStudioVisible => SelectedRail == RailDestination.DesignStudio;
     public bool IsNeedsYouVisible => SelectedRail == RailDestination.NeedsYou;
     public bool IsSecurityVisible => SelectedRail == RailDestination.Security;
     public bool IsSettingsVisible => SelectedRail == RailDestination.Settings;
-    public bool IsMissionVisible => SelectedRail is not RailDestination.Terminal and not RailDestination.Chat and not RailDestination.Diagnostics and not RailDestination.Memory and not RailDestination.Debrief and not RailDestination.Skills and not RailDestination.Progression and not RailDestination.Artifacts and not RailDestination.Evaluation and not RailDestination.Fabric and not RailDestination.Compute and not RailDestination.Extensions and not RailDestination.NeedsYou and not RailDestination.Security and not RailDestination.Settings;
+    public bool IsMissionVisible => SelectedRail is not RailDestination.Terminal and not RailDestination.Chat and not RailDestination.Diagnostics and not RailDestination.Memory and not RailDestination.Debrief and not RailDestination.Skills and not RailDestination.Progression and not RailDestination.Artifacts and not RailDestination.Evaluation and not RailDestination.Fabric and not RailDestination.Compute and not RailDestination.Extensions and not RailDestination.DesignStudio and not RailDestination.NeedsYou and not RailDestination.Security and not RailDestination.Settings;
     public bool IsCommandBarVisible => !IsChatVisible;
     public bool IsActivityDeckVisible => IsActivityVisible && !IsChatVisible;
     public bool IsGraphView => MissionView == MissionViewMode.Graph;
@@ -725,6 +739,38 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         }
     }
 
+    private async ValueTask<DesignSession> GenerateDesignFromChatAsync(string objective, CancellationToken cancellationToken)
+    {
+        SelectRail(RailDestination.DesignStudio);
+        var session = await _runtime.Design.Orchestrator.GenerateAsync(
+            DesignSurfaceId.ChatWorkspace,
+            objective,
+            new DesignCaptureRequest(DesignViewportProfile.Expanded, 1920, 1080, Mode: DesignCaptureMode.SyntheticContent),
+            DataClassification.Internal,
+            3,
+            cancellationToken).ConfigureAwait(true);
+        _designStudio.ApplySession(session);
+        return session;
+    }
+
+    private async Task ImplementDesignAsync(DesignCandidate candidate)
+    {
+        var objective = $"Implement the selected Abraxius Design Studio candidate '{candidate.Title}' for {candidate.SourceSnapshot.Surface}. " +
+            $"The exact design artifact is {candidate.ArtifactReference ?? "the pinned candidate metadata"}; source snapshot {candidate.SourceSnapshot.SnapshotHash}. " +
+            "Orion must inspect the current Avalonia surface first. Daedalus may translate design intent into native Avalonia code in an isolated worktree. " +
+            "Preserve existing behavior, keyboard contracts, security boundaries, responsive rules, and compiled bindings. Argus must build, test, and validate the target viewports before success.";
+        SelectRail(RailDestination.Mission);
+        SetStatus("DESIGN IMPLEMENTATION MISSION CREATED");
+        var result = await _runtime.RunMissionAsync(
+            new Intent(objective, CorrelationId.New()) { Priority = WorkPriority.Interactive },
+            new MissionSuccessContract(objective,
+                ["Selected design intent is implemented in the existing Avalonia architecture."],
+                ["Build and tests pass.", "Required interactions remain functional.", "Responsive validation has no blocking overflow."],
+                ["Do not copy generated HTML into the application.", "Do not silently integrate unreviewed source."]),
+            SpecialistRole.Builder).ConfigureAwait(true);
+        SetStatus(result.Succeeded ? "DESIGN IMPLEMENTATION VERIFIED" : $"DESIGN IMPLEMENTATION {result.Mission.State.ToString().ToUpperInvariant()}");
+    }
+
     public void SelectTask(TaskId taskId)
     {
         SelectedTask = Graph.Tasks.FirstOrDefault(task => task.TaskId == taskId);
@@ -754,6 +800,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         OnPropertyChanged(nameof(IsFabricVisible));
         OnPropertyChanged(nameof(IsComputeVisible));
         OnPropertyChanged(nameof(IsExtensionsVisible));
+        OnPropertyChanged(nameof(IsDesignStudioVisible));
         OnPropertyChanged(nameof(IsNeedsYouVisible));
         OnPropertyChanged(nameof(IsSecurityVisible));
         OnPropertyChanged(nameof(IsSettingsVisible));
@@ -783,6 +830,16 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         IsCommandPaletteOpen = true;
         CommandSearchText = string.Empty;
         OnPropertyChanged(nameof(IsCommandPaletteOpen));
+    }
+
+    public void AttachDesignCaptureRoot(Control root)
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        foreach (var surface in _runtime.Design.Surfaces.List())
+        {
+            _runtime.Design.Surfaces.AttachCapture(surface.Id,
+                (request, cancellationToken) => AvaloniaDesignSurfaceCapture.CaptureAsync(root, surface.Id, request, cancellationToken));
+        }
     }
 
     public void CloseCommandPalette()
@@ -845,19 +902,6 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         _runtime.Presence.NeedsYou.Changed -= OnNeedsYouChanged;
         _runtime.Presence.InApp.Received -= OnInAppNotification;
         if (_ownsRuntime) await _runtime.DisposeAsync();
-    }
-
-    private async Task RunDemoInBackgroundAsync()
-    {
-        try
-        {
-            var result = await _runtime.RunDemoAsync();
-            SetStatus(result.Succeeded ? "DEMO COMPLETE / READY" : "DEMO NEEDS ATTENTION");
-        }
-        catch (Exception exception)
-        {
-            SetStatus($"ERROR {exception.Message}");
-        }
     }
 
     private void ApplySnapshot(UiGraphSnapshot snapshot)
@@ -1241,7 +1285,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
             Item("Diagnostics", RailDestination.Diagnostics, "SYSTEM", NavigationIcons.Diagnostics, SelectDiagnosticsCommand, "AXL and runtime diagnostics"),
             Item("Fabric", RailDestination.Fabric, "SYSTEM", NavigationIcons.Fabric, SelectFabricCommand, "Distributed node fabric"),
             Item("Compute", RailDestination.Compute, "SYSTEM", NavigationIcons.Compute, SelectComputeCommand, "Local models and compute"),
-            Item("Extensions", RailDestination.Extensions, "SYSTEM", NavigationIcons.Extensions, SelectExtensionsCommand, "Installed plugin extensions")
+            Item("Extensions", RailDestination.Extensions, "SYSTEM", NavigationIcons.Extensions, SelectExtensionsCommand, "Installed plugin extensions"),
+            Item("Design Studio", RailDestination.DesignStudio, "SYSTEM", NavigationIcons.DesignStudio, SelectDesignStudioCommand, "Generate and review UI designs")
         ]));
         _navigationGroups.Add(new UiNavigationGroup("ATTENTION", [
             Item("Needs You", RailDestination.NeedsYou, "ATTENTION", NavigationIcons.NeedsYou, SelectNeedsYouCommand, "Items waiting for a decision"),
@@ -1294,6 +1339,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         Register("fabric.open", "Open Fabric", "Inspect authenticated nodes, resources, placement capabilities, and connectivity", "Fabric", "", _ => { SelectRail(RailDestination.Fabric); _fabric.Refresh(); return ValueTask.CompletedTask; });
         Register("compute.open", "Open Compute", "Inspect devices, model residency, workloads, and local inference backends", "Compute", "", _ => { SelectRail(RailDestination.Compute); Forget(_compute.RefreshAsync()); return ValueTask.CompletedTask; });
         Register("plugins.open", "Open Extensions", "Inspect installed plugins, permissions, isolated hosts, and diagnostics", "Extensions", "", _ => { SelectRail(RailDestination.Extensions); Forget(_extensions.RefreshAsync()); return ValueTask.CompletedTask; });
+        Register("design.open", "Open Design Studio", "Generate, compare, and implement provider-backed UI design candidates", "Design", "", _ => { SelectRail(RailDestination.DesignStudio); Forget(_designStudio.RefreshAsync()); return ValueTask.CompletedTask; });
+        Register("design.current", "Design Current Surface", "Generate design candidates for the active Abraxius surface", "Design", "⌘⇧D", _ => { SelectRail(RailDestination.DesignStudio); Forget(_designStudio.GenerateAsync()); return ValueTask.CompletedTask; });
         Register("plugins.restart", "Restart Extension", "Restart the selected isolated PluginHost", "Extensions", "", _ => { SelectRail(RailDestination.Extensions); _extensions.RestartCommand.Execute(null); return ValueTask.CompletedTask; });
         Register("presence.needs-you", "Open Needs You", "Review durable approvals and decisions waiting for you", "Presence", "", _ => { SelectRail(RailDestination.NeedsYou); Forget(RefreshNeedsYouAsync()); return ValueTask.CompletedTask; });
         Register("security.open", "Open Security", "Inspect bounded authority, grants, secrets, policies, and audit", "Security", "", _ => { SelectRail(RailDestination.Security); Forget(RefreshSecurityAsync()); return ValueTask.CompletedTask; });

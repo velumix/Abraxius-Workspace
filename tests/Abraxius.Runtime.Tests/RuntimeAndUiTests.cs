@@ -206,6 +206,16 @@ public sealed class RuntimeAndUiTests
     }
 
     [Fact]
+    public void ChatMarkdownPreservesParagraphAndListText()
+    {
+        var blocks = ChatMarkdownParser.Parse("Hello from Abraxius.\n\n- Core abilities\n- Streaming answers");
+
+        Assert.Contains(blocks, static block => block is ChatParagraphBlock { Text: "Hello from Abraxius." });
+        var list = Assert.Single(blocks.OfType<ChatListBlock>());
+        Assert.Equal(["Core abilities", "Streaming answers"], list.Items);
+    }
+
+    [Fact]
     public async Task ChatComposerSupportsSpecialistSuggestionsContextAndMissionMode()
     {
         var chat = new ChatViewModel(new MockModelProvider(TimeSpan.Zero), new CountingDispatcher(), ["Athena", "Orion"]);

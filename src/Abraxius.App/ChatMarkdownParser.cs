@@ -87,12 +87,31 @@ public static class ChatMarkdownParser
 
     private static string BlockText(Block block)
     {
-        if (block is ContainerBlock container)
+        // ParagraphBlock is a leaf block whose content lives in Inline rather than
+        // child Block objects.  Falling through to Block.ToString() leaks Markdig's
+        // runtime type name into the transcript (especially for list items).
+        if (block is ParagraphBlock paragraph)
         {
-            return string.Join(Environment.NewLine, container.OfType<Block>().Select(BlockText)).Trim();
+            return InlineText(paragraph.Inline);
         }
 
-        return block.ToString()?.Trim() ?? string.Empty;
+        if (block is HeadingBlock heading)
+        {
+            return InlineText(heading.Inline);
+        }
+
+        if (block is ContainerBlock container)
+        {
+            return string.Join(Environment.NewLine,
+                container.OfType<Block>()
+                    .Select(BlockText)
+                    .Where(static text => text.Length > 0))
+                .Trim();
+        }
+
+        // Unknown Markdown nodes are intentionally omitted rather than rendered
+        // through ToString(), which is not user-facing content.
+        return string.Empty;
     }
 
     private static string CodeText(FencedCodeBlock code)

@@ -8,6 +8,12 @@ using Abraxius.Protocol;
 
 namespace Abraxius.App;
 
+public sealed record ChatSpecialistProfile(
+    string DisplayName,
+    string Role,
+    string Mission,
+    bool CanDelegate);
+
 /// <summary>Conversation state for the dedicated chat room. Mission execution remains an explicit action.</summary>
 public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
 {
@@ -15,6 +21,7 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
     private readonly IModelProvider _model;
     private readonly IUiDispatcher _dispatcher;
     private readonly List<(bool IsUser, string Text)> _history = [];
+    private readonly IReadOnlyDictionary<string, ChatSpecialistProfile> _specialistProfiles;
     private readonly string _sessionKey = $"chat:{Guid.NewGuid():N}";
     private CancellationTokenSource? _sendCancellation;
     private string _input = string.Empty;
@@ -31,12 +38,20 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
     private bool _isSending;
     private int _disposed;
 
-    public ChatViewModel(IModelProvider model, IUiDispatcher dispatcher, IEnumerable<string>? specialistNames = null)
+    public ChatViewModel(
+        IModelProvider model,
+        IUiDispatcher dispatcher,
+        IEnumerable<string>? specialistNames = null,
+        IEnumerable<ChatSpecialistProfile>? specialistProfiles = null)
     {
         _model = model ?? throw new ArgumentNullException(nameof(model));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _specialistProfiles = (specialistProfiles ?? BuiltInChatSpecialists())
+            .Where(static profile => !string.IsNullOrWhiteSpace(profile.DisplayName))
+            .GroupBy(static profile => profile.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(static group => group.Key, static group => group.First(), StringComparer.OrdinalIgnoreCase);
         _specialistNames = specialistNames?.Where(static name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(static name => name, StringComparer.OrdinalIgnoreCase).ToArray()
-            ?? ["Athena", "Orion", "Daedalus", "Argus"];
+            ?? _specialistProfiles.Keys.OrderBy(static name => name, StringComparer.OrdinalIgnoreCase).ToArray();
         SendCommand = new AsyncRelayCommand(SendAsync, () => !IsSending && !string.IsNullOrWhiteSpace(Input));
         CancelCommand = new RelayCommand(_ => Cancel(), () => IsSending);
         ClearCommand = new RelayCommand(_ => Clear());
@@ -156,6 +171,9 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
         var text = Input.Trim();
         if (text.Length == 0 || IsSending) return;
 
+        // Capture the selected owner before clearing the composer. Clearing Input
+        // updates mention suggestions and intentionally clears transient targeting.
+        var conversationSpecialist = CurrentSpecialist;
         Input = string.Empty;
         var userMessage = new ChatMessageViewModel(Guid.NewGuid(), "YOU", text, DateTimeOffset.UtcNow, true);
         AddMessage(userMessage);
@@ -163,7 +181,13 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
         TrimHistory();
 
         var assistantId = Guid.NewGuid();
-        var assistantMessage = new ChatMessageViewModel(assistantId, string.IsNullOrWhiteSpace(ActiveSpecialist) ? "ABRAXIUS" : $"ABRAXIUS · {ActiveSpecialist.ToUpperInvariant()}", "Thinking…", DateTimeOffset.UtcNow, false, isStreaming: true);
+        var assistantMessage = new ChatMessageViewModel(
+            assistantId,
+            $"ABRAXIUS · {conversationSpecialist.DisplayName.ToUpperInvariant()}",
+            "Thinking…",
+            DateTimeOffset.UtcNow,
+            false,
+            isStreaming: true);
         AddMessage(assistantMessage);
         IsSending = true;
         Status = "THINKING · STREAMING RESPONSE";
@@ -174,10 +198,17 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
         try
         {
             var request = new ModelRequest(
-                BuildPrompt(),
-                SystemPrompt: "You are Abraxius, a helpful AI workstation companion. Answer naturally and clearly. Do not claim to have changed files, run tools, or completed a mission from chat alone. If the user wants an action, explain that they can use Run as mission.",
+                BuildPrompt(conversationSpecialist),
+                SystemPrompt: BuildSystemPrompt(conversationSpecialist),
                 Priority: WorkPriority.Interactive,
-                Metadata: new Dictionary<string, string> { ["surface"] = "chat-room" })
+                Metadata: new Dictionary<string, string>
+                {
+                    ["surface"] = "chat-room",
+                    ["orchestration"] = "agent-kernel",
+                    ["coordinator"] = "Athena",
+                    ["conversation.specialist"] = conversationSpecialist.DisplayName,
+                    ["conversation.role"] = conversationSpecialist.Role
+                })
             {
                 TaskClass = IntelligenceTaskClass.SimpleQuestion,
                 Complexity = IntelligenceComplexity.Simple,
@@ -406,9 +437,13 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
         return ValueTask.CompletedTask;
     }
 
-    private string BuildPrompt()
+    private string BuildPrompt(ChatSpecialistProfile specialist)
     {
         var builder = new System.Text.StringBuilder();
+        builder.AppendLine("ABRAXIUS CHAT ROUTING:");
+        builder.AppendLine("COORDINATOR: Athena");
+        builder.Append("CONVERSATIONAL OWNER: ").Append(specialist.DisplayName).Append(" (").Append(specialist.Role).AppendLine(")");
+        builder.AppendLine("Handoff semantics: Athena coordinates; Orion investigates; Daedalus proposes implementation; Argus verifies. A handoff is only complete when the real Mission runtime reports it.");
         builder.AppendLine("Conversation so far:");
         foreach (var turn in _history.TakeLast(24))
         {
@@ -433,6 +468,42 @@ public sealed class ChatViewModel : INotifyPropertyChanged, IAsyncDisposable
         builder.AppendLine("ABRAXIUS:");
         return builder.ToString();
     }
+
+    private static string BuildSystemPrompt(ChatSpecialistProfile specialist)
+    {
+        var delegation = specialist.CanDelegate
+            ? "You may explain a proposed handoff to Orion, Daedalus, or Argus, but do not claim that it ran unless the user explicitly launched Mission mode and the runtime reported the result."
+            : $"If the request requires another role, explain that {specialist.DisplayName} will hand it back to Athena for coordination or recommend the appropriate specialist; do not impersonate another specialist.";
+
+        return string.Join(Environment.NewLine,
+        [
+            $"You are {specialist.DisplayName}, Abraxius's {specialist.Role} specialist.",
+            $"Your responsibility is: {specialist.Mission}",
+            "You are speaking inside the Abraxius Chat workspace, not as the underlying model provider.",
+            "Never introduce yourself as Felo, OmniRoute, an API, a model, or any other provider identity.",
+            "Never mention provider branding unless the user explicitly asks about routing or diagnostics.",
+            "Preserve Abraxius specialist identity and use the role above consistently.",
+            delegation,
+            "Chat alone is conversational and must not claim to have changed files, run tools, used secrets, completed a mission, or verified an artifact.",
+            "When the user wants execution, direct them to Run as Mission. Mission mode uses the existing AgentKernel handoff chain and its real runtime state.",
+            "Answer naturally, clearly, and helpfully. Do not fabricate progress, evidence, tool output, or specialist activity."
+        ]);
+    }
+
+    private ChatSpecialistProfile CurrentSpecialist =>
+        !string.IsNullOrWhiteSpace(ActiveSpecialist) && _specialistProfiles.TryGetValue(ActiveSpecialist, out var selected)
+            ? selected
+            : _specialistProfiles.TryGetValue("Athena", out var athena)
+                ? athena
+                : new ChatSpecialistProfile("Athena", "Coordinator", "Mission strategist and coordinator.", true);
+
+    private static IReadOnlyList<ChatSpecialistProfile> BuiltInChatSpecialists() =>
+    [
+        new("Athena", "Coordinator", "Mission strategist and coordinator.", true),
+        new("Orion", "Investigator", "Evidence-led repository and systems investigation.", false),
+        new("Daedalus", "Builder", "Constrained implementation and repair.", false),
+        new("Argus", "Verifier", "Independent verification and regression detection.", false)
+    ];
 
     private void TrimHistory()
     {

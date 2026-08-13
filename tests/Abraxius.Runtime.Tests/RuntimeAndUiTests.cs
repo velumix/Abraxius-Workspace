@@ -175,6 +175,44 @@ public sealed class RuntimeAndUiTests
     }
 
     [Fact]
+    public async Task ChatUsesAthenaIdentityAndRoutingContextByDefault()
+    {
+        var provider = new CapturingModelProvider();
+        var chat = new ChatViewModel(provider, new CountingDispatcher());
+        chat.Input = "What should we do next?";
+
+        await chat.SendAsync();
+
+        Assert.NotNull(provider.LastRequest);
+        Assert.Contains("You are Athena", provider.LastRequest!.SystemPrompt, StringComparison.Ordinal);
+        Assert.Contains("not as the underlying model provider", provider.LastRequest.SystemPrompt, StringComparison.Ordinal);
+        Assert.Equal("Athena", provider.LastRequest.Metadata!["conversation.specialist"]);
+        Assert.Equal("Athena", provider.LastRequest.Metadata["coordinator"]);
+        Assert.Equal("ATHENA", chat.Messages.Single(static message => message.IsAssistant).Speaker.Split(" · ")[1]);
+
+        await chat.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task ChatMentionUsesRegisteredSpecialistProfile()
+    {
+        var provider = new CapturingModelProvider();
+        var chat = new ChatViewModel(provider, new CountingDispatcher());
+        chat.Input = "@Orion inspect the evidence";
+        chat.SelectSuggestionCommand.Execute(chat.Suggestions.Single(static suggestion => suggestion.Value == "Orion"));
+
+        await chat.SendAsync();
+
+        Assert.NotNull(provider.LastRequest);
+        Assert.Contains("You are Orion", provider.LastRequest!.SystemPrompt, StringComparison.Ordinal);
+        Assert.Equal("Orion", provider.LastRequest.Metadata!["conversation.specialist"]);
+        Assert.Contains("CONVERSATIONAL OWNER: Orion", provider.LastRequest.Prompt, StringComparison.Ordinal);
+        Assert.Contains("Evidence-led repository", provider.LastRequest.SystemPrompt, StringComparison.Ordinal);
+
+        await chat.DisposeAsync();
+    }
+
+    [Fact]
     public async Task ChatStreamingBufferCoalescesFastTokensWithoutChangingFinalText()
     {
         var dispatcher = new CountingDispatcher();
@@ -287,6 +325,36 @@ public sealed class RuntimeAndUiTests
 
         Assert.Equal(2, entries.Count);
         Assert.All(entries, entry => Assert.Equal(RuntimeEventKind.RuntimeWarning, entry.Kind));
+    }
+
+    private sealed class CapturingModelProvider : IModelProvider
+    {
+        public ModelRequest? LastRequest { get; private set; }
+
+        public ValueTask<ModelResult> InferAsync(ModelRequest request, CancellationToken cancellationToken = default)
+        {
+            LastRequest = request;
+            return ValueTask.FromResult(new ModelResult(
+                "Captured response.",
+                null,
+                "test-model",
+                null,
+                TimeSpan.Zero,
+                "test"));
+        }
+
+        public async IAsyncEnumerable<ModelStreamEvent> StreamAsync(
+            ModelRequest request,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            LastRequest = request;
+            yield return new ModelStreamEvent.Started(DateTimeOffset.UtcNow, "test-model");
+            await Task.Yield();
+            yield return new ModelStreamEvent.Token(DateTimeOffset.UtcNow, "Captured response.");
+            yield return new ModelStreamEvent.Completed(
+                DateTimeOffset.UtcNow,
+                new ModelResult("Captured response.", null, "test-model", null, TimeSpan.Zero, "test"));
+        }
     }
 
     private sealed class CountingDispatcher : IUiDispatcher

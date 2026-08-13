@@ -268,7 +268,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
         _fabric = new FabricViewModel(runtime.Fabric, _dispatcher);
         _compute = new ComputeViewModel(runtime.Compute, _dispatcher);
         _extensions = new ExtensionsViewModel(runtime.Plugins, _dispatcher);
-        _chat = new ChatViewModel(runtime.Model, _dispatcher, runtime.Agents.Registry.Definitions.Select(static definition => definition.DisplayName));
+        _chat = new ChatViewModel(
+            runtime.Model,
+            _dispatcher,
+            runtime.Agents.Registry.Definitions.Select(static definition => definition.DisplayName),
+            runtime.Agents.Registry.Definitions.Select(static definition => new ChatSpecialistProfile(
+                definition.DisplayName,
+                definition.Role.ToString(),
+                definition.Mission.Summary,
+                definition.PlanningPolicy.AllowDelegation)));
         _terminal = new TerminalViewModel(_dispatcher, new ProcessTerminalSurface(processService));
         _aggregator = new RuntimeUiStateAggregator(runtime.Events, _dispatcher, ApplySnapshot, runtime.Metrics);
         _voiceEvents = new VoiceEventHub();

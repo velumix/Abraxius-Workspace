@@ -64,6 +64,12 @@ internal sealed class SecurityLatticePolicy(ISecurityKernel security, IResourceC
             "force_push" => (SecurityActions.GitForcePush, ResourceKind.GitRepository, true),
             _ => (SecurityActions.CapabilityInvoke, ResourceKind.Capability, !descriptor.ReadOnly)
         };
+        if (descriptor.Name.Equals("agent-reach.web", StringComparison.OrdinalIgnoreCase) && operation == "read")
+        {
+            // Keep the network resource kind so SSRF/private-network policy
+            // still applies before the read-only capability executes.
+            return (SecurityActions.CapabilityInvoke, ResourceKind.Network, false);
+        }
         return (SecurityActions.CapabilityInvoke, ResourceKind.Capability, false);
     }
 }

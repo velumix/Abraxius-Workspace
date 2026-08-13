@@ -194,6 +194,40 @@ public sealed class RuntimeAndUiTests
     }
 
     [Fact]
+    public async Task ChatUsesAgentReachOnlyForAnExplicitUrlAndPassesTheReadAsReferenceMaterial()
+    {
+        var provider = new CapturingModelProvider();
+        var calls = 0;
+        ValueTask<CapabilityResult> Research(string url, CancellationToken _)
+        {
+            calls++;
+            return ValueTask.FromResult(new CapabilityResult(
+                true,
+                "Read through Agent Reach.",
+                [EvidenceId.New()],
+                new Dictionary<string, string>
+                {
+                    ["source"] = url,
+                    ["route"] = "agent-reach/jina-reader",
+                    ["content"] = "The page says the scheduler uses bounded queues."
+                }));
+        }
+
+        var chat = new ChatViewModel(provider, new CountingDispatcher(), webResearch: Research);
+        chat.Input = "Read this page and summarize it: https://example.com/scheduler";
+
+        await chat.SendAsync();
+
+        Assert.Equal(1, calls);
+        Assert.NotNull(provider.LastRequest);
+        Assert.Equal("agent-reach", provider.LastRequest!.Metadata!["web.research"]);
+        Assert.Contains("BEGIN WEB CONTENT", provider.LastRequest.Prompt, StringComparison.Ordinal);
+        Assert.Contains("bounded queues", provider.LastRequest.Prompt, StringComparison.Ordinal);
+
+        await chat.DisposeAsync();
+    }
+
+    [Fact]
     public async Task ChatMentionUsesRegisteredSpecialistProfile()
     {
         var provider = new CapturingModelProvider();

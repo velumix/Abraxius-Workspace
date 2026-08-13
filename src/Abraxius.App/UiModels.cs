@@ -276,7 +276,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IAsyncDisposable, IU
                 definition.DisplayName,
                 definition.Role.ToString(),
                 definition.Mission.Summary,
-                definition.PlanningPolicy.AllowDelegation)));
+                definition.PlanningPolicy.AllowDelegation)),
+            runtime.ReadPublicWebAsync);
         _terminal = new TerminalViewModel(_dispatcher, new ProcessTerminalSurface(processService));
         _aggregator = new RuntimeUiStateAggregator(runtime.Events, _dispatcher, ApplySnapshot, runtime.Metrics);
         _voiceEvents = new VoiceEventHub();

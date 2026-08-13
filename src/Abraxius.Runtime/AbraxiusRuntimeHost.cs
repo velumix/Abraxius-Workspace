@@ -136,6 +136,31 @@ public sealed class AbraxiusRuntimeHost : IAsyncDisposable
     public IModelProvider Model => _model;
     public ExecutionResult? LastExecution { get; private set; }
 
+    /// <summary>
+    /// Reads an explicitly supplied public URL through the registered,
+    /// security-checked Agent Reach capability. Chat uses this entry point so
+    /// it never reaches around Lattice or invokes a shell command directly.
+    /// </summary>
+    public async ValueTask<CapabilityResult> ReadPublicWebAsync(string url, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(url)) throw new ArgumentException("A public URL is required.", nameof(url));
+        await StartAsync(cancellationToken).ConfigureAwait(false);
+        var request = new CapabilityRequest(
+            new CapabilityId("agent-reach.web"),
+            "read",
+            url,
+            Parameters: null,
+            CorrelationId.New(),
+            ExecutionId.New(),
+            TaskId.New(),
+            SecurityContext: new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["principal.type"] = PrincipalType.System.ToString(),
+                ["principal.id"] = "system:chat-agent-reach"
+            });
+        return await _lattice.ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
     public static AbraxiusRuntimeHost CreateDefault(RuntimeHostOptions? options = null)
     {
         var effectiveOptions = options ?? RuntimeConfigurationLoader.ToHostOptions(RuntimeConfigurationLoader.Load());
@@ -219,6 +244,7 @@ public sealed class AbraxiusRuntimeHost : IAsyncDisposable
         services.AddSingleton<ConfigurableSecurityApprovalSink>();
         services.AddSingleton<ILatticePolicy, SecurityLatticePolicy>();
         services.AddSingleton<ILatticeCapability>(_ => new MockLatticeCapability());
+        services.AddSingleton<ILatticeCapability>(provider => new AgentReachWebCapability(provider.GetRequiredService<IEvidenceStore>()));
         services.AddSingleton<LatticeExecutor>();
         services.AddSingleton<IWorkExecutorRegistry>(provider => RuntimeWorkExecutorFactory.Create(
             provider.GetRequiredService<IModelProvider>(),
